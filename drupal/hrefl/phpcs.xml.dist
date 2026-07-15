@@ -12,6 +12,12 @@
 
   <arg name="extensions" value="php,module,inc,install,test,yml"/>
 
+  <!--
+    Warnings (e.g. the 80-char soft line limit, "open page callback") stay
+    visible in the report but do not fail CI; only errors gate a merge.
+  -->
+  <config name="ignore_warnings_on_exit" value="1"/>
+
   <rule ref="Drupal">
     <!-- Docblock presence is not required on every function/method. -->
     <exclude name="Drupal.Commenting.FunctionComment.Missing"/>
