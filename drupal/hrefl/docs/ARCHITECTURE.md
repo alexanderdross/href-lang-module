@@ -246,9 +246,12 @@ hand-maintained source-of-truth file.
 - Observability: structured logs (no secrets/PII), metrics (match/auto-confirm
   rate, coverage %, broken-link count, time-to-map), dashboards + alerts.
 
-## 9. Platform-neutral contract (future WordPress client)
+## 9. Platform-neutral contract (and the standalone WordPress version)
 
 The hub API (ingest + serve + CSV) is defined in transport-neutral terms (JSON
-over HTTPS, see `docs/DATA-MODEL.md`). A future WordPress `hrefl_client`
-equivalent can implement the same publish/pull contract without any hub change,
-satisfying the project's "maybe later WordPress" intent.
+over HTTPS, see `docs/DATA-MODEL.md`). The WordPress version has since been
+delivered as a **standalone** all-WordPress plugin (`../../wordpress/hrefl-wp/`,
+client + hub by role) that runs its **own** hub rather than joining the Drupal
+one — the two are independent (an all-WP family uses one, an all-Drupal family
+the other). The neutral contract still means a future client could reuse these
+endpoints if cross-platform interop were ever wanted.

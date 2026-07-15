@@ -111,7 +111,8 @@ injection and permission-gated with an audit trail.
 automated tests (Kernel/Functional) and CI; mapping is *content* (versioned,
 auditable), settings are *config*; idempotent, retrying, backed-off sync;
 observability (match rate, auto-confirm rate, coverage %, broken-link count);
-platform-neutral hub API so a WordPress client can join later.
+platform-neutral hub API. (A standalone WordPress plugin now also exists in
+`../../wordpress/hrefl-wp/` — all-WP, running its own hub, not sharing this one.)
 
 ## 5. Why the multi-signal engine is the heart of it
 
@@ -132,9 +133,9 @@ sustainable rather than a perpetual chore. Full design: `docs/AUTOMATION.md`.
   own multilingual sitemap + selector + JSON-LD emitters; validation and
   monitoring.
 - **Out of scope (now):** content/translation authoring; visual/brand design of
-  the selector beyond a working, accessible default; WordPress client (kept
-  possible via the platform-neutral API); **any IP/geo auto-redirect** (excluded
-  by design).
+  the selector beyond a working, accessible default; cross-platform interop (the
+  WordPress version ships **standalone** in `../../wordpress/hrefl-wp/`, not
+  sharing this Drupal hub); **any IP/geo auto-redirect** (excluded by design).
 
 ## Sources
 - [Localized versions of your pages - Google Search Central](https://developers.google.com/search/docs/specialty/international/localized-versions)

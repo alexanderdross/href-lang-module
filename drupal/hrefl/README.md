@@ -5,9 +5,12 @@ path-prefixed Drupal backends that together form one international site, and
 feeds those alternates into the module's **own** multilingual XML sitemap and a
 crawlable country/language selector.
 
-This is the code scaffold for the concept documented in the canonical doc set
-under [`docs/`](docs/) (`docs/CONCEPT.md`, `docs/AUTOMATION.md`,
-`docs/ARCHITECTURE.md`, ...).
+This is the Drupal implementation. A **standalone WordPress version** lives in
+`../wordpress/hrefl-wp/` (all-WP family, its own hub — not interoperable with
+this Drupal hub). Concept + design in the canonical doc set under
+[`docs/`](docs/) (`docs/CONCEPT.md`, `docs/AUTOMATION.md`, `docs/ARCHITECTURE.md`,
+plus `docs/SETUP-GUIDE.md`, `docs/QA-ASSESSMENT.md`, `docs/UAT-PLAN.md`,
+`docs/SECURITY-TEST-PLAN.md`, `docs/PERFORMANCE-TEST-PLAN.md`).
 
 ## Packages
 

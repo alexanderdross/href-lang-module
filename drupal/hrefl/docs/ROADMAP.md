@@ -55,10 +55,13 @@ ambiguous middle band; the system learns.
   annotations; the selector lets visitors switch market to the equivalent page;
   ops can see and fix issues proactively.
 
-## Phase 4 - Scale & future platforms
-**Goal:** more markets, and the "maybe later WordPress" path.
-- Onboarding flow for new market backends (register → publish → match → review).
-- WordPress `hrefl_client` implementing the same platform-neutral hub API.
+## Phase 4 - Scale & platforms
+**Goal:** more markets, and the WordPress path (delivered).
+- Onboarding flow for new market backends (register → publish → match → review)
+  — the guided "Add market" admin screen is in place.
+- WordPress — **delivered** as a standalone all-WordPress plugin
+  (`../../wordpress/hrefl-wp/`, client + hub by role). It runs its own hub and
+  does **not** share the Drupal hub (by decision).
 - Broader OPU/market rollout beyond Corporate.
 
 ## Phase 5 (future / optional) - Productization: freemium + premium
