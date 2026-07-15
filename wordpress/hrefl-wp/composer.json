@@ -1,0 +1,15 @@
+{
+    "name": "boehringer-ingelheim/hrefl-wp",
+    "description": "Cross-site hreflang for a family of independent WordPress sites (client + hub).",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}

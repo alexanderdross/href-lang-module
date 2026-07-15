@@ -1,0 +1,9 @@
+'administer hrefl hub':
+  title: 'Administer Hreflang Hub'
+  description: 'Configure the hub, AI matcher providers and thresholds.'
+  restrict access: true
+
+'hrefl hub review mappings':
+  title: 'Hreflang Hub: review mappings'
+  description: 'Export, review and import the translation-group mapping (CSV + UI).'
+  restrict access: true

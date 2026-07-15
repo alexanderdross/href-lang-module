@@ -1,0 +1,30 @@
+# Default client configuration. The service token should be stored via the key
+# module in production, not here.
+hub_base_url: 'https://pro.boehringer-ingelheim.com/hrefl-hub/api/v1'
+# This backend's market key (global | de | us | ca ...).
+market: 'global'
+# key-module key name holding the shared HMAC secret for signing hub requests.
+# For local development, set the HREFL_HUB_SECRET environment variable instead.
+hub_key_name: ''
+# Absolute base URL of this backend (used to build absolute alternate URLs).
+site_base_url: 'https://pro.boehringer-ingelheim.com'
+# Emit head-tag hreflang here as well as via the sitemap. At large scale the
+# sitemap can be the primary carrier and this turned off per section.
+emit_head_tags: true
+# Serve the module's own multilingual sitemap at /hrefl/sitemap.xml. This is the
+# multilingual carrier (simple_sitemap is single-language and not used for this).
+sitemap_enabled: true
+# Default <priority> applied to sitemap URLs (0.0–1.0).
+sitemap_priority: 0.5
+# URLs per sitemap file; beyond this the sitemap becomes a chunked index.
+# The 50000 / 50MB spec limit is the ceiling; lower it only for testing.
+sitemap_chunk_size: 50000
+# Emit hreflang as an HTTP Link header too (useful for non-HTML files like PDFs
+# where <head> tags cannot be injected). Off by default.
+emit_link_header: false
+# Optional: machine name of an image field on content whose first image is
+# published as the review preview thumbnail (e.g. 'field_image'). Empty = none.
+thumbnail_field: ''
+# Map Drupal langcodes served by this backend to hreflang codes.
+hreflang_map:
+  en: 'en'

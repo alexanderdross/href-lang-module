@@ -1,0 +1,9 @@
+name: 'Hreflang Client'
+type: module
+description: 'Runs on every backend: collects page inventory, pulls resolved alternates from the hub, and emits reciprocal hreflang tags, sitemap alternates, and a country/language selector.'
+package: 'SEO'
+core_version_requirement: '^10.3 || ^11'
+configure: hrefl_client.settings
+dependencies:
+  - drupal:system
+  - drupal:language

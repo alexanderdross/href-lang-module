@@ -1,0 +1,104 @@
+# Service-to-service API. Authenticated by an HMAC signature over the request
+# (see SignedRequestAccessCheck); per-backend URL ownership is enforced in the
+# controller (see IngestController / MarketRegistry).
+hrefl_hub.api.ingest:
+  path: '/hrefl-hub/api/v1/inventory'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\IngestController::ingest'
+  methods: [POST]
+  requirements:
+    _hrefl_signed: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+hrefl_hub.api.alternates:
+  path: '/hrefl-hub/api/v1/alternates'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\ServeController::alternates'
+  methods: [GET]
+  requirements:
+    _hrefl_signed: 'TRUE'
+  options:
+    no_cache: 'TRUE'
+
+hrefl_hub.api.csv_export:
+  path: '/hrefl-hub/api/v1/export.csv'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\CsvController::export'
+  methods: [GET]
+  requirements:
+    _permission: 'hrefl hub review mappings'
+
+hrefl_hub.api.csv_import:
+  path: '/hrefl-hub/api/v1/import.csv'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\CsvController::import'
+  methods: [POST]
+  requirements:
+    _permission: 'hrefl hub review mappings'
+  options:
+    no_cache: 'TRUE'
+
+hrefl_hub.settings:
+  path: '/admin/config/search/hrefl-hub'
+  defaults:
+    _form: 'Drupal\hrefl_hub\Form\HubSettingsForm'
+    _title: 'Hreflang Hub settings'
+  requirements:
+    _permission: 'administer hrefl hub'
+
+# Guided market management (onboarding: add / edit / remove markets).
+hrefl_hub.markets:
+  path: '/admin/config/search/hrefl-hub/markets'
+  defaults:
+    _form: 'Drupal\hrefl_hub\Form\MarketsForm'
+    _title: 'Markets'
+  requirements:
+    _permission: 'administer hrefl hub'
+
+# Health dashboard: coverage KPIs + graph-validation issues.
+hrefl_hub.dashboard:
+  path: '/admin/config/search/hrefl-hub/dashboard'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\DashboardController::overview'
+    _title: 'Hreflang health'
+  requirements:
+    _permission: 'hrefl hub review mappings'
+
+# In-app review queue (the CSV round-trip's counterpart): bulk confirm/reject
+# with preview thumbnails.
+hrefl_hub.review:
+  path: '/admin/config/search/hrefl-hub/review'
+  defaults:
+    _form: 'Drupal\hrefl_hub\Form\ReviewQueueForm'
+    _title: 'Hreflang review queue'
+  requirements:
+    _permission: 'hrefl hub review mappings'
+
+hrefl_hub.review_action:
+  path: '/admin/config/search/hrefl-hub/review/{member}/{op}'
+  defaults:
+    _controller: 'Drupal\hrefl_hub\Controller\ReviewController::act'
+  requirements:
+    _permission: 'hrefl hub review mappings'
+    _csrf_token: 'TRUE'
+    member: \d+
+    op: 'confirm|reject'
+
+# Confirmation step for a bulk action (staged in tempstore), then batch-applied.
+hrefl_hub.review_confirm:
+  path: '/admin/config/search/hrefl-hub/review/confirm'
+  defaults:
+    _form: 'Drupal\hrefl_hub\Form\ReviewConfirmForm'
+    _title: 'Confirm review action'
+  requirements:
+    _permission: 'hrefl hub review mappings'
+
+# Point-and-click CSV upload (the counterpart to the export button).
+hrefl_hub.csv_import_form:
+  path: '/admin/config/search/hrefl-hub/import'
+  defaults:
+    _form: 'Drupal\hrefl_hub\Form\CsvImportForm'
+    _title: 'Import review CSV'
+  requirements:
+    _permission: 'hrefl hub review mappings'

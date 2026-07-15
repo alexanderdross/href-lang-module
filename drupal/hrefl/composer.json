@@ -1,0 +1,16 @@
+{
+    "name": "boehringer-ingelheim/hrefl",
+    "description": "Cross-backend hreflang for a family of independent, path-prefixed Drupal backends (client + hub, with tiered auto-mapping).",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "keywords": ["Drupal", "hreflang", "SEO", "i18n", "multilingual"],
+    "require": {
+        "php": ">=8.1",
+        "drupal/core": "^10.3 || ^11"
+    },
+    "suggest": {
+        "drupal/metatag": "Optional integration point for head-tag emission.",
+        "drupal/key": "Secure storage for hub credentials and AI provider API keys."
+    },
+    "comment": "The module generates its own multilingual XML sitemap (xhtml:link alternates + lastmod + priority) at /hrefl/sitemap.xml; simple_sitemap is single-language here and is not required."
+}

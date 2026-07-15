@@ -1,0 +1,80 @@
+services:
+  logger.channel.hrefl_client:
+    parent: logger.channel_base
+    arguments: ['hrefl_client']
+
+  # Enforces the hreflang correctness rules on every emitted set.
+  hrefl_client.validator:
+    class: Drupal\hrefl_client\Service\HreflangValidator
+
+  # Local, denormalized alternates cache (what rendering reads).
+  hrefl_client.alternates_store:
+    class: Drupal\hrefl_client\Service\AlternatesStore
+    arguments:
+      - '@database'
+      - '@datetime.time'
+      - '@cache_tags.invalidator'
+
+  # Builds this backend's page inventory + matching signals.
+  hrefl_client.inventory_collector:
+    class: Drupal\hrefl_client\Service\InventoryCollector
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@language_manager'
+      - '@file_url_generator'
+
+  # Signs outbound hub requests with this backend's shared HMAC secret.
+  hrefl_client.request_signer:
+    class: Drupal\hrefl_client\Service\RequestSigner
+    arguments:
+      - '@config.factory'
+      - '@datetime.time'
+      - '@?key.repository'
+
+  # HTTP transport to the hub (ingest + serve).
+  hrefl_client.hub_client:
+    class: Drupal\hrefl_client\Service\HubClient
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.channel.hrefl_client'
+      - '@hrefl_client.request_signer'
+
+  # Pulls resolved alternates from the hub and writes the local store.
+  hrefl_client.alternates_consumer:
+    class: Drupal\hrefl_client\Service\AlternatesConsumer
+    arguments:
+      - '@hrefl_client.hub_client'
+      - '@hrefl_client.alternates_store'
+      - '@config.factory'
+      - '@hrefl_client.validator'
+
+  # Builds the hreflang head tags for the current page.
+  hrefl_client.emitter:
+    class: Drupal\hrefl_client\Service\HreflangEmitter
+    arguments:
+      - '@hrefl_client.alternates_store'
+      - '@hrefl_client.validator'
+
+  # Builds this backend's own multilingual XML sitemap from the local store.
+  hrefl_client.sitemap_generator:
+    class: Drupal\hrefl_client\Service\SitemapGenerator
+    arguments:
+      - '@hrefl_client.alternates_store'
+      - '@hrefl_client.validator'
+      - '@config.factory'
+
+  # Emits the hreflang HTTP Link header for non-HTML responses (opt-in).
+  hrefl_client.link_header_subscriber:
+    class: Drupal\hrefl_client\EventSubscriber\LinkHeaderSubscriber
+    arguments:
+      - '@config.factory'
+      - '@hrefl_client.emitter'
+    tags:
+      - { name: event_subscriber }
+
+  # Class-named aliases so Drush commands (and any autowired consumer) can
+  # resolve these services by type.
+  Drupal\hrefl_client\Service\AlternatesConsumer: '@hrefl_client.alternates_consumer'
+  Drupal\hrefl_client\Service\HreflangEmitter: '@hrefl_client.emitter'

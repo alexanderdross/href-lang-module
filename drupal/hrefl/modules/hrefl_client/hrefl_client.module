@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * @file
+ * Hooks for the Hreflang Client: emit head tags, sync on cron, track changes.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_page_attachments().
+ *
+ * Emits the current page's hreflang link tags from the local store. This never
+ * calls the hub; it reads the pre-computed alternates cached on this backend.
+ */
+function hrefl_client_page_attachments(array &$attachments): void {
+  $config = \Drupal::config('hrefl_client.settings');
+  if (!$config->get('emit_head_tags')) {
+    return;
+  }
+  try {
+    $current = Url::fromRoute('<current>', [], ['absolute' => TRUE])->toString();
+  }
+  catch (\Exception $e) {
+    return;
+  }
+  /** @var \Drupal\hrefl_client\Service\HreflangEmitter $emitter */
+  $emitter = \Drupal::service('hrefl_client.emitter');
+  foreach ($emitter->headElements($current) as $key => $element) {
+    $attachments['#attached']['html_head'][] = [$element, $key];
+  }
+  // Invalidate this page's hreflang when its group mapping changes.
+  $groupTag = $emitter->cacheTagForUrl($current);
+  if ($groupTag) {
+    $attachments['#cache']['tags'][] = $groupTag;
+  }
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Publishes this backend's inventory to the hub and pulls resolved alternates.
+ * Both directions are batched and off the request path.
+ */
+function hrefl_client_cron(): void {
+  /** @var \Drupal\hrefl_client\Service\InventoryCollector $collector */
+  $collector = \Drupal::service('hrefl_client.inventory_collector');
+  /** @var \Drupal\hrefl_client\Service\HubClient $hub */
+  $hub = \Drupal::service('hrefl_client.hub_client');
+  /** @var \Drupal\hrefl_client\Service\AlternatesConsumer $consumer */
+  $consumer = \Drupal::service('hrefl_client.alternates_consumer');
+
+  try {
+    $records = $collector->collect(200);
+    if ($records) {
+      $hub->publishInventory($records);
+    }
+    $consumer->pull();
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('hrefl_client')->error('Cron sync failed: @m', ['@m' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function hrefl_client_entity_insert(EntityInterface $entity): void {
+  _hrefl_client_enqueue_change($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function hrefl_client_entity_update(EntityInterface $entity): void {
+  _hrefl_client_enqueue_change($entity);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function hrefl_client_entity_delete(EntityInterface $entity): void {
+  _hrefl_client_enqueue_change($entity);
+}
+
+/**
+ * Queue a changed content entity's URL for the next inventory publish.
+ *
+ * Event-driven matching: publishing/updating/retiring a page re-syncs it in
+ * near real time, rather than waiting for a full crawl.
+ */
+function _hrefl_client_enqueue_change(EntityInterface $entity): void {
+  if (!($entity instanceof \Drupal\Core\Entity\ContentEntityInterface) || !$entity->hasLinkTemplate('canonical')) {
+    return;
+  }
+  try {
+    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+  }
+  catch (\Exception $e) {
+    return;
+  }
+  \Drupal::queue('hrefl_client_publish')->createItem(['url' => $url]);
+}

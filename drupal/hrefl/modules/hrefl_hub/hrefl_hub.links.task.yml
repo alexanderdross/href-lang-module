@@ -1,0 +1,19 @@
+hrefl_hub.settings_tab:
+  title: 'Settings'
+  route_name: hrefl_hub.settings
+  base_route: hrefl_hub.settings
+
+hrefl_hub.review_tab:
+  title: 'Review queue'
+  route_name: hrefl_hub.review
+  base_route: hrefl_hub.settings
+
+hrefl_hub.dashboard_tab:
+  title: 'Health'
+  route_name: hrefl_hub.dashboard
+  base_route: hrefl_hub.settings
+
+hrefl_hub.markets_tab:
+  title: 'Markets'
+  route_name: hrefl_hub.markets
+  base_route: hrefl_hub.settings

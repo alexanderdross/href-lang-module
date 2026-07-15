@@ -1,0 +1,30 @@
+{
+  "_comment": "Phase 0 hand-authored mapping (docs/ROADMAP.md). Seed this on each backend with `drush hrefl:seed`. Every page lists the full, reciprocal member set (self + siblings + x-default), so seeding the same file on the Global and DE backends yields a correct reciprocal pair without the hub. Mirrors the serve endpoint shape in docs/DATA-MODEL.md.",
+  "market": "seed",
+  "pages": [
+    {
+      "url": "https://pro.boehringer-ingelheim.com/about-us",
+      "group_uuid": "7f3a0000-0000-4000-8000-000000000001",
+      "alternates": [
+        { "hreflang": "en", "href": "https://pro.boehringer-ingelheim.com/about-us" },
+        { "hreflang": "de", "href": "https://pro.boehringer-ingelheim.com/de/ueber-uns" },
+        { "hreflang": "en-US", "href": "https://pro.boehringer-ingelheim.com/us/about-us" },
+        { "hreflang": "en-CA", "href": "https://pro.boehringer-ingelheim.com/ca/about-us" },
+        { "hreflang": "fr-CA", "href": "https://pro.boehringer-ingelheim.com/ca/fr/a-propos" },
+        { "hreflang": "x-default", "href": "https://pro.boehringer-ingelheim.com/about-us" }
+      ]
+    },
+    {
+      "url": "https://pro.boehringer-ingelheim.com/de/ueber-uns",
+      "group_uuid": "7f3a0000-0000-4000-8000-000000000001",
+      "alternates": [
+        { "hreflang": "en", "href": "https://pro.boehringer-ingelheim.com/about-us" },
+        { "hreflang": "de", "href": "https://pro.boehringer-ingelheim.com/de/ueber-uns" },
+        { "hreflang": "en-US", "href": "https://pro.boehringer-ingelheim.com/us/about-us" },
+        { "hreflang": "en-CA", "href": "https://pro.boehringer-ingelheim.com/ca/about-us" },
+        { "hreflang": "fr-CA", "href": "https://pro.boehringer-ingelheim.com/ca/fr/a-propos" },
+        { "hreflang": "x-default", "href": "https://pro.boehringer-ingelheim.com/about-us" }
+      ]
+    }
+  ]
+}

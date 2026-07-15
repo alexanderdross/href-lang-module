@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * @file
+ * Schema for the client-side local alternates store.
+ *
+ * The store is a denormalized cache of the confirmed alternates the hub has
+ * resolved for this backend. Page render reads only from here, so a request
+ * never calls the hub or a sibling backend.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function hrefl_client_schema(): array {
+  $schema['hrefl_client_alternates'] = [
+    'description' => 'Local, pre-computed alternates for this backend (from the hub).',
+    'fields' => [
+      'url' => [
+        'type' => 'varchar',
+        'length' => 2048,
+        'not null' => TRUE,
+        'description' => 'Absolute canonical URL on this backend.',
+      ],
+      'url_hash' => [
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'description' => 'Hash of url (primary key; url is too long to key).',
+      ],
+      'group_uuid' => [
+        'type' => 'varchar_ascii',
+        'length' => 36,
+        'not null' => FALSE,
+        'description' => 'Group this URL belongs to (for cache tagging).',
+      ],
+      'alternates' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'description' => 'JSON: [{hreflang, href}, ...] including self and x-default.',
+      ],
+      'lastmod' => [
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'Content last-modified time for the sitemap <lastmod>.',
+      ],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['url_hash'],
+    'indexes' => ['group' => ['group_uuid']],
+  ];
+  return $schema;
+}
+
+/**
+ * Add the lastmod column used by the multilingual sitemap.
+ */
+function hrefl_client_update_9001(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('hrefl_client_alternates', 'lastmod')) {
+    $schema->addField('hrefl_client_alternates', 'lastmod', [
+      'type' => 'int',
+      'not null' => FALSE,
+      'description' => 'Content last-modified time for the sitemap <lastmod>.',
+    ]);
+  }
+}

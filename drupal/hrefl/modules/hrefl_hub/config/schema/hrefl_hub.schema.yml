@@ -1,0 +1,91 @@
+hrefl_hub.settings:
+  type: config_object
+  label: 'Hreflang Hub settings'
+  mapping:
+    canonical_host:
+      type: string
+      label: 'Canonical host'
+    markets:
+      type: sequence
+      label: 'Market definitions'
+      sequence:
+        type: mapping
+        label: 'Market'
+        mapping:
+          prefix:
+            type: string
+            label: 'Owned absolute URL prefix'
+          key_name:
+            type: string
+            label: 'HMAC secret key name (key module)'
+    thresholds:
+      type: mapping
+      label: 'Confidence thresholds'
+      mapping:
+        confirm:
+          type: float
+          label: 'Auto-confirm threshold'
+        floor:
+          type: float
+          label: 'Floor threshold'
+    auto_confirm_enabled:
+      type: boolean
+      label: 'Auto-confirm enabled'
+    ai_matcher:
+      type: mapping
+      label: 'AI matcher'
+      mapping:
+        provider:
+          type: string
+          label: 'Selected provider'
+        data_scope:
+          type: string
+          label: 'Data scope'
+    providers:
+      type: sequence
+      label: 'Providers'
+      sequence:
+        type: mapping
+        label: 'Provider'
+        mapping:
+          endpoint:
+            type: string
+            label: 'Endpoint'
+          model:
+            type: string
+            label: 'Model'
+          api_version:
+            type: string
+            label: 'API version'
+          key_name:
+            type: string
+            label: 'Key name (key module)'
+    embedding:
+      type: mapping
+      label: 'Tier B embeddings'
+      mapping:
+        provider:
+          type: string
+          label: 'Active embedding provider'
+        threshold:
+          type: float
+          label: 'Similarity threshold'
+        top_k:
+          type: integer
+          label: 'Candidates per page'
+        providers:
+          type: sequence
+          label: 'Embedding providers'
+          sequence:
+            type: mapping
+            label: 'Embedding provider'
+            mapping:
+              endpoint:
+                type: string
+                label: 'Endpoint'
+              model:
+                type: string
+                label: 'Model'
+              key_name:
+                type: string
+                label: 'Key name (key module)'

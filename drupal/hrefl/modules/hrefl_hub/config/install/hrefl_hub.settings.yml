@@ -1,0 +1,58 @@
+# Default hub configuration. Secrets (API keys, service tokens) should be stored
+# via the key module in production, not here.
+canonical_host: 'https://pro.boehringer-ingelheim.com'
+# Market definitions. Each market owns an absolute URL prefix — a path prefix
+# under the shared host OR a separate domain — so both topologies are supported:
+#   pro.boehringer-ingelheim.com/de/   (path prefix)
+#   pro.boehringer-ingelheim.es/       (own domain)
+# key_name is the key-module key holding this market's shared HMAC secret.
+# If a market is absent here, its prefix is derived from canonical_host.
+markets:
+  global:
+    prefix: 'https://pro.boehringer-ingelheim.com/'
+    key_name: ''
+  de:
+    prefix: 'https://pro.boehringer-ingelheim.com/de/'
+    key_name: ''
+  us:
+    prefix: 'https://pro.boehringer-ingelheim.com/us/'
+    key_name: ''
+  ca:
+    prefix: 'https://pro.boehringer-ingelheim.com/ca/'
+    key_name: ''
+# Confidence thresholds for the router (see docs/AUTOMATION.md).
+thresholds:
+  confirm: 0.95
+  floor: 0.60
+# When false, every match goes to review regardless of confidence.
+auto_confirm_enabled: false
+# AI matcher (Tier C). Either Microsoft Copilot or Anthropic may be used for
+# both adjudication and translation — both are fully supported; select one here.
+ai_matcher:
+  provider: 'copilot'
+  # 'metadata' (default, governance-safe) or 'full' (opt-in, gated).
+  data_scope: 'metadata'
+providers:
+  copilot:
+    # Approved, region-resident Copilot / Azure OpenAI deployment endpoint.
+    endpoint: ''
+    model: 'gpt-4o'
+    key_name: ''
+  anthropic:
+    endpoint: 'https://api.anthropic.com/v1/messages'
+    model: 'claude-sonnet-4-5'
+    api_version: '2023-06-01'
+    key_name: ''
+# Tier B semantic candidate generation (embeddings). Self-hosted multilingual
+# model preferred to keep content in-house. Inert until an endpoint is set.
+embedding:
+  provider: 'http'
+  # Cosine similarity above which a neighbour is a strong candidate (tau_high).
+  threshold: 0.82
+  # Max neighbours surfaced per page for Tier-C adjudication.
+  top_k: 5
+  providers:
+    http:
+      endpoint: ''
+      model: 'multilingual-e5-base'
+      key_name: ''

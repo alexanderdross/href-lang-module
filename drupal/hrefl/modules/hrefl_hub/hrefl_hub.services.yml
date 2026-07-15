@@ -1,0 +1,131 @@
+services:
+  logger.channel.hrefl_hub:
+    parent: logger.channel_base
+    arguments: ['hrefl_hub']
+
+  # Derives comparable leaf slugs for URL-pattern matching.
+  hrefl_hub.slug_normalizer:
+    class: Drupal\hrefl_hub\Service\SlugNormalizer
+
+  # The translation-group registry: source of truth (CRUD over the DB tables).
+  hrefl_hub.registry:
+    class: Drupal\hrefl_hub\Service\Registry
+    arguments:
+      - '@database'
+      - '@datetime.time'
+      - '@uuid'
+      - '@hrefl_hub.slug_normalizer'
+
+  # Market definitions: URL-ownership, host allowlist, per-market HMAC secret.
+  hrefl_hub.market_registry:
+    class: Drupal\hrefl_hub\Service\MarketRegistry
+    arguments:
+      - '@config.factory'
+      - '@?key.repository'
+
+  # Verifies HMAC-signed service requests on the _hrefl_signed routes.
+  hrefl_hub.signed_request_access_check:
+    class: Drupal\hrefl_hub\Access\SignedRequestAccessCheck
+    arguments:
+      - '@hrefl_hub.market_registry'
+      - '@datetime.time'
+    tags:
+      - { name: access_check, applies_to: _hrefl_signed }
+
+  # Structural rule validation of a group (codes, x-default, absolute URLs).
+  hrefl_hub.mapping_validator:
+    class: Drupal\hrefl_hub\Service\MappingValidator
+
+  # SSRF-safe target validation (200 / canonical / index).
+  hrefl_hub.target_validator:
+    class: Drupal\hrefl_hub\Service\TargetValidator
+    arguments:
+      - '@http_client'
+      - '@hrefl_hub.market_registry'
+      - '@logger.channel.hrefl_hub'
+
+  # Applies confirm/reject decisions with the correctness guard (shared by the
+  # CSV import and the admin review UI).
+  hrefl_hub.review_actions:
+    class: Drupal\hrefl_hub\Service\ReviewActions
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@hrefl_hub.mapping_validator'
+
+  # Applies review decisions from a CSV (shared by the API and the upload form).
+  hrefl_hub.csv_importer:
+    class: Drupal\hrefl_hub\Service\CsvImporter
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@hrefl_hub.review_actions'
+
+  # Tier A: cheap, exact, explainable matching.
+  hrefl_hub.deterministic_matcher:
+    class: Drupal\hrefl_hub\Service\DeterministicMatcher
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@hrefl_hub.slug_normalizer'
+
+  # Plugin manager for the AI matcher (Tier C) providers.
+  plugin.manager.hrefl_ai_matcher:
+    class: Drupal\hrefl_hub\Plugin\HreflAiMatcher\AiMatcherManager
+    parent: default_plugin_manager
+
+  # Plugin manager for the Tier-B embedding providers.
+  plugin.manager.hrefl_embedding_provider:
+    class: Drupal\hrefl_hub\Plugin\HreflEmbedding\EmbeddingProviderManager
+    parent: default_plugin_manager
+
+  # Tier-B vector store (brute-force cosine; swappable for a real ANN index).
+  hrefl_hub.vector_store:
+    class: Drupal\hrefl_hub\Service\VectorStore
+    arguments:
+      - '@database'
+      - '@datetime.time'
+
+  # Tier-B candidate generation from embeddings.
+  hrefl_hub.embedding_matcher:
+    class: Drupal\hrefl_hub\Service\EmbeddingMatcher
+    arguments:
+      - '@plugin.manager.hrefl_embedding_provider'
+      - '@hrefl_hub.vector_store'
+      - '@hrefl_hub.registry'
+      - '@config.factory'
+      - '@logger.channel.hrefl_hub'
+
+  # Orchestrates the tiered pipeline and writes results to the registry.
+  hrefl_hub.mapping_engine:
+    class: Drupal\hrefl_hub\Service\MappingEngine
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@hrefl_hub.deterministic_matcher'
+      - '@plugin.manager.hrefl_ai_matcher'
+      - '@config.factory'
+      - '@logger.channel.hrefl_hub'
+      - '@hrefl_hub.embedding_matcher'
+
+  # AI-assisted mapping via translation (Tier C, Copilot or Anthropic).
+  hrefl_hub.translation_proposer:
+    class: Drupal\hrefl_hub\Service\TranslationProposer
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@plugin.manager.hrefl_ai_matcher'
+      - '@config.factory'
+      - '@logger.channel.hrefl_hub'
+
+  # Pre-computes the per-URL resolved alternate set served to clients.
+  hrefl_hub.distributor:
+    class: Drupal\hrefl_hub\Service\Distributor
+    arguments:
+      - '@hrefl_hub.registry'
+
+  # Validates the graph and reports coverage/health for the dashboard.
+  hrefl_hub.monitor:
+    class: Drupal\hrefl_hub\Service\Monitor
+    arguments:
+      - '@hrefl_hub.registry'
+      - '@datetime.time'
+
+  # Class-named aliases so Drush commands can resolve services by type.
+  Drupal\hrefl_hub\Service\Registry: '@hrefl_hub.registry'
+  Drupal\hrefl_hub\Service\TranslationProposer: '@hrefl_hub.translation_proposer'

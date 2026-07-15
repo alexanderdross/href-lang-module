@@ -1,0 +1,40 @@
+hrefl_client.settings:
+  type: config_object
+  label: 'Hreflang Client settings'
+  mapping:
+    hub_base_url:
+      type: string
+      label: 'Hub base URL'
+    market:
+      type: string
+      label: 'Market key'
+    hub_key_name:
+      type: string
+      label: 'Hub HMAC secret key name (key module)'
+    site_base_url:
+      type: string
+      label: 'Site base URL'
+    thumbnail_field:
+      type: string
+      label: 'Thumbnail image field'
+    emit_head_tags:
+      type: boolean
+      label: 'Emit head-tag hreflang'
+    sitemap_enabled:
+      type: boolean
+      label: 'Serve the multilingual sitemap'
+    sitemap_priority:
+      type: float
+      label: 'Default sitemap priority'
+    sitemap_chunk_size:
+      type: integer
+      label: 'URLs per sitemap file'
+    emit_link_header:
+      type: boolean
+      label: 'Emit hreflang HTTP Link header'
+    hreflang_map:
+      type: sequence
+      label: 'Langcode to hreflang map'
+      sequence:
+        type: string
+        label: 'hreflang code'

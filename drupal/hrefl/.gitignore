@@ -1,0 +1,5 @@
+/vendor/
+*.docx
+*.zip
+*.pdf
+.DS_Store

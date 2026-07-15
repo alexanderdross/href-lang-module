@@ -1,0 +1,271 @@
+<?php
+
+/**
+ * @file
+ * Install, schema and uninstall hooks for the Hreflang Hub.
+ *
+ * The hub is the source of truth. A "translation group" is a set of URLs across
+ * markets that represent the same content; every member shares one group UUID,
+ * which is what guarantees hreflang reciprocity by construction.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function hrefl_hub_schema(): array {
+  $schema = [];
+
+  // A translation group: one set of equivalent URLs across markets.
+  $schema['hrefl_group'] = [
+    'description' => 'Translation groups: sets of equivalent URLs across markets.',
+    'fields' => [
+      'group_uuid' => [
+        'type' => 'varchar_ascii',
+        'length' => 36,
+        'not null' => TRUE,
+        'description' => 'Stable UUID for the set.',
+      ],
+      'x_default_member' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => 'member id designated as x-default (usually Global/en).',
+      ],
+      'version' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'Registry version, bumped on each apply (audit/rollback).',
+      ],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['group_uuid'],
+  ];
+
+  // A member of a group: one URL on one backend.
+  $schema['hrefl_group_member'] = [
+    'description' => 'Members of translation groups: one URL per market/language.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'group_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'market' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'language' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE],
+      'hreflang' => ['type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+      'url' => ['type' => 'varchar', 'length' => 2048, 'not null' => TRUE],
+      'path_key' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Normalized leaf slug of the URL, for URL-pattern matching.',
+      ],
+      'title' => [
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => FALSE,
+        'description' => 'Page title (content signal for AI matching/translation).',
+      ],
+      'image' => [
+        'type' => 'varchar',
+        'length' => 2048,
+        'not null' => FALSE,
+        'description' => 'Representative image URL for the review preview thumbnail.',
+      ],
+      'entity_type' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'entity_id' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'status' => [
+        'type' => 'varchar_ascii',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => 'proposed',
+        'description' => 'proposed | confirmed | rejected | held.',
+      ],
+      'matched_by' => [
+        'type' => 'varchar_ascii',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => 'manual',
+        'description' => 'key | schema | glossary | embedding | llm | manual.',
+      ],
+      'confidence' => ['type' => 'float', 'not null' => FALSE],
+      'signals' => [
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => FALSE,
+        'description' => 'JSON breakdown of signals + sub-scores (explainable).',
+      ],
+      'asserted_by' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => FALSE],
+      'source_changed' => ['type' => 'int', 'not null' => FALSE],
+      'last_validated' => ['type' => 'int', 'not null' => FALSE],
+      'valid' => ['type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'default' => 0],
+      'locked' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Editor pin: automation must not override.',
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'url' => ['url'],
+    ],
+    'indexes' => [
+      'group' => ['group_uuid'],
+      'market_status' => ['market', 'status'],
+      'hreflang' => ['hreflang'],
+      'path_key' => ['path_key'],
+    ],
+  ];
+
+  // Learned glossary of equivalent slug tokens per language pair.
+  $schema['hrefl_glossary'] = [
+    'description' => 'Learned URL/slug glossary that feeds Tier-A deterministic matching.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'source_lang' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE],
+      'target_lang' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE],
+      'source_token' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+      'target_token' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE],
+      'weight' => ['type' => 'float', 'not null' => TRUE, 'default' => 1.0],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'lookup' => ['source_lang', 'target_lang', 'source_token'],
+    ],
+  ];
+
+  // Audit log of every human decision (feeds threshold tuning / few-shot).
+  $schema['hrefl_feedback'] = [
+    'description' => 'Audit + learning log of editor decisions.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'group_uuid' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => FALSE],
+      'member_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE],
+      'action' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'actor' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => FALSE],
+      'signals' => ['type' => 'text', 'size' => 'medium', 'not null' => FALSE],
+      'created' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['id'],
+    'indexes' => ['group' => ['group_uuid']],
+  ];
+
+  // Tier-B embedding store: one vector per URL per content version.
+  $schema['hrefl_embedding'] = [
+    'description' => 'Cached embedding vectors for Tier-B semantic candidate search.',
+    'fields' => [
+      'url_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'url' => ['type' => 'varchar', 'length' => 2048, 'not null' => TRUE],
+      'market' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'language' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE],
+      'content_hash' => [
+        'type' => 'varchar_ascii',
+        'length' => 64,
+        'not null' => TRUE,
+        'description' => 'Hash of the embedded text; re-embed only when it changes.',
+      ],
+      'dims' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'vector' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'description' => 'JSON array of floats.',
+      ],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['url_hash'],
+    'indexes' => ['market' => ['market']],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add the path_key column for URL-pattern matching and backfill it.
+ */
+function hrefl_hub_update_9001(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('hrefl_group_member', 'path_key')) {
+    $schema->addField('hrefl_group_member', 'path_key', [
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+      'description' => 'Normalized leaf slug of the URL, for URL-pattern matching.',
+    ], ['indexes' => ['path_key' => ['path_key']]]);
+  }
+
+  /** @var \Drupal\hrefl_hub\Service\SlugNormalizer $slug */
+  $slug = \Drupal::service('hrefl_hub.slug_normalizer');
+  $database = \Drupal::database();
+  $rows = $database->select('hrefl_group_member', 'm')
+    ->fields('m', ['id', 'url'])
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($rows as $id => $url) {
+    $database->update('hrefl_group_member')
+      ->fields(['path_key' => $slug->slug((string) $url)])
+      ->condition('id', $id)
+      ->execute();
+  }
+}
+
+/**
+ * Add the title column (content signal for AI matching/translation).
+ */
+function hrefl_hub_update_9002(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('hrefl_group_member', 'title')) {
+    $schema->addField('hrefl_group_member', 'title', [
+      'type' => 'varchar',
+      'length' => 512,
+      'not null' => FALSE,
+      'description' => 'Page title (content signal for AI matching/translation).',
+    ]);
+  }
+}
+
+/**
+ * Add the image column for the review preview thumbnail.
+ */
+function hrefl_hub_update_9004(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('hrefl_group_member', 'image')) {
+    $schema->addField('hrefl_group_member', 'image', [
+      'type' => 'varchar',
+      'length' => 2048,
+      'not null' => FALSE,
+      'description' => 'Representative image URL for the review preview thumbnail.',
+    ]);
+  }
+}
+
+/**
+ * Add the Tier-B embedding store table.
+ */
+function hrefl_hub_update_9003(): void {
+  $schema = \Drupal::database()->schema();
+  if ($schema->tableExists('hrefl_embedding')) {
+    return;
+  }
+  $schema->createTable('hrefl_embedding', [
+    'description' => 'Cached embedding vectors for Tier-B semantic candidate search.',
+    'fields' => [
+      'url_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'url' => ['type' => 'varchar', 'length' => 2048, 'not null' => TRUE],
+      'market' => ['type' => 'varchar_ascii', 'length' => 32, 'not null' => TRUE],
+      'language' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE],
+      'content_hash' => ['type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+      'dims' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+      'vector' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'updated' => ['type' => 'int', 'not null' => TRUE, 'default' => 0],
+    ],
+    'primary key' => ['url_hash'],
+    'indexes' => ['market' => ['market']],
+  ]);
+}

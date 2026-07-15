@@ -1,0 +1,38 @@
+hrefl_client.settings:
+  path: '/admin/config/search/hrefl'
+  defaults:
+    _form: 'Drupal\hrefl_client\Form\ClientSettingsForm'
+    _title: 'Hreflang Client settings'
+  requirements:
+    _permission: 'administer hrefl client'
+
+# Headless feed: the current page's alternates as JSON, for a decoupled
+# front end to render its own selector. Read from the local store only.
+hrefl_client.selector_feed:
+  path: '/hrefl/selector'
+  defaults:
+    _controller: 'Drupal\hrefl_client\Controller\SelectorController::feed'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+# The module's own multilingual XML sitemap (xhtml:link alternates + lastmod +
+# priority), generated from the local store. For large sites this is a sitemap
+# index pointing at the numbered chunk sitemaps below.
+hrefl_client.sitemap:
+  path: '/hrefl/sitemap.xml'
+  defaults:
+    _controller: 'Drupal\hrefl_client\Controller\SitemapController::sitemap'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+# One chunk of a large sitemap (referenced by the index above).
+hrefl_client.sitemap_chunk:
+  path: '/hrefl/sitemap.{page}.xml'
+  defaults:
+    _controller: 'Drupal\hrefl_client\Controller\SitemapController::chunk'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+    page: \d+

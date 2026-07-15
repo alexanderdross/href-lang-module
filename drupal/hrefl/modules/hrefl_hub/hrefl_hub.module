@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Hooks for the Hreflang Hub: match ingested pages and revalidate targets,
+ * both off the request path.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_cron().
+ *
+ * Two off-request passes:
+ * 1. Run Tier-A (deterministic URL-pattern) matching over members awaiting a
+ *    match, so ingested pages coalesce into proposed cross-market groups.
+ * 2. Enqueue members whose target is unvalidated or stale for an SSRF-safe
+ *    200/canonical/index check (performed in the validate-targets queue worker).
+ */
+function hrefl_hub_cron(): void {
+  /** @var \Drupal\hrefl_hub\Service\Registry $registry */
+  $registry = \Drupal::service('hrefl_hub.registry');
+
+  // Warm Tier-B vectors before matching so embedding candidates are available
+  // (no-op until an embedding provider is configured).
+  \Drupal::service('hrefl_hub.embedding_matcher')->embedPass(200);
+  _hrefl_hub_match_pass($registry);
+  _hrefl_hub_enqueue_validation($registry);
+}
+
+/**
+ * Tier-A matching pass: coalesce same-content pages into proposed groups.
+ */
+function _hrefl_hub_match_pass($registry): void {
+  /** @var \Drupal\hrefl_hub\Service\MappingEngine $engine */
+  $engine = \Drupal::service('hrefl_hub.mapping_engine');
+  $matched = 0;
+  foreach ($registry->membersNeedingMatch(200) as $member) {
+    // Never let automation touch an editor-pinned member.
+    if ((int) $member['locked'] === 1) {
+      continue;
+    }
+    $engine->match([
+      'url' => $member['url'],
+      'market' => $member['market'],
+      'language' => $member['language'],
+      'hreflang' => $member['hreflang'],
+      'entity_type' => $member['entity_type'],
+      'entity_id' => $member['entity_id'],
+      'changed' => $member['source_changed'],
+      'valid' => $member['valid'],
+    ]);
+    $matched++;
+  }
+  if ($matched) {
+    // Re-homing members can orphan their old singleton groups.
+    $registry->deleteEmptyGroups();
+  }
+}
+
+/**
+ * Enqueue members needing a target (re)validation.
+ */
+function _hrefl_hub_enqueue_validation($registry): void {
+  // Re-check anything older than a day, and everything never checked.
+  $staleBefore = \Drupal::time()->getRequestTime() - 86400;
+  $members = $registry->membersNeedingValidation(200, $staleBefore);
+  if (!$members) {
+    return;
+  }
+  $queue = \Drupal::queue('hrefl_hub_validate_targets');
+  foreach ($members as $member) {
+    $queue->createItem([
+      'member_id' => (int) $member['id'],
+      'url' => (string) $member['url'],
+    ]);
+  }
+}

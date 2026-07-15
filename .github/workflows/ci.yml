@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------ #
+  # Coding standards + PHP syntax, across both platforms (fast).        #
+  # ------------------------------------------------------------------ #
+  standards:
+    name: standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+          coverage: none
+
+      - name: PHP syntax lint
+        run: find drupal wordpress -name '*.php' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
+
+      - name: Install Drupal coding standards
+        run: |
+          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction --no-progress \
+            drupal/coder:^8.3 dealerdirect/phpcodesniffer-composer-installer:^1
+          echo "$(composer global config bin-dir --absolute)" >> "$GITHUB_PATH"
+
+      - name: PHPCS (Drupal + DrupalPractice)
+        run: |
+          phpcs --standard=Drupal,DrupalPractice \
+            --extensions=php,module,inc,install,test,yml \
+            drupal/hrefl
+
+  # ------------------------------------------------------------------ #
+  # WordPress: standalone PHPUnit unit suite (no WordPress needed).     #
+  # ------------------------------------------------------------------ #
+  wordpress:
+    name: wordpress
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wordpress/hrefl-wp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+          coverage: none
+
+      - run: composer install --no-interaction --no-progress
+
+      - run: vendor/bin/phpunit
+
+  # ------------------------------------------------------------------ #
+  # Drupal: PHPUnit (unit + kernel) on a fresh Drupal 11 with SQLite.   #
+  # ------------------------------------------------------------------ #
+  drupal:
+    name: drupal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: module
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, pdo_sqlite, mbstring, dom, xml, curl, tokenizer, simplexml
+          tools: composer
+          coverage: none
+
+      - name: Create Drupal 11 project
+        run: composer create-project drupal/recommended-project:^11 drupal --no-interaction --no-progress
+
+      - name: Add core-dev and place the module
+        working-directory: drupal
+        run: |
+          composer config --no-plugins allow-plugins true
+          composer require --dev --no-interaction --no-progress drupal/core-dev:^11
+          mkdir -p web/modules/custom
+          cp -R "$GITHUB_WORKSPACE/module/drupal/hrefl" web/modules/custom/hrefl
+
+      - name: PHPUnit (unit + kernel)
+        working-directory: drupal
+        env:
+          SIMPLETEST_DB: "sqlite://localhost/sites/default/files/test.sqlite"
+          SYMFONY_DEPRECATIONS_HELPER: disabled
+        run: |
+          ./vendor/bin/phpunit -c web/core/phpunit.xml.dist \
+            --testsuite unit,kernel \
+            --group hrefl_client,hrefl_hub

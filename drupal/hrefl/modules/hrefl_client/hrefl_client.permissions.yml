@@ -1,0 +1,4 @@
+'administer hrefl client':
+  title: 'Administer Hreflang Client'
+  description: 'Configure the hub connection, this market, and language codes.'
+  restrict access: true

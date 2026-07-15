@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>href-langs-module - Architecture (v2)</title>
+<style>
+  :root{
+    --ink:#1e293b; --muted:#64748b; --line:#475569;
+    --hub:#4f46e5; --hubbg:#eef2ff;
+    --client:#0d9488; --clientbg:#f0fdfa;
+    --ai:#d97706; --aibg:#fffbeb;
+    --human:#e11d48; --humanbg:#fff1f2;
+    --out:#16a34a; --outbg:#f0fdf4;
+    --nav:#7c3aed; --navbg:#f5f3ff;
+    --mon:#0284c7; --monbg:#f0f9ff;
+    --panel:#f8fafc; --border:#e2e8f0;
+  }
+  html,body{margin:0;background:#fff;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1360px;margin:0 auto;padding:20px 16px 40px;}
+  svg{width:100%;height:auto;display:block;}
+  .cap{color:var(--muted);font-size:13px;line-height:1.55;margin:14px 6px 0;}
+  .cap b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg viewBox="0 0 1320 892" role="img" aria-label="Cross-backend hreflang architecture v2">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7.5,3 L0,6 Z" fill="#475569"/></marker>
+    <marker id="arrowA" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7.5,3 L0,6 Z" fill="#d97706"/></marker>
+    <marker id="arrowH" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7.5,3 L0,6 Z" fill="#e11d48"/></marker>
+    <marker id="arrowM" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L7.5,3 L0,6 Z" fill="#0284c7"/></marker>
+    <style>
+      .t{font-family:inherit;}
+      .h1{font-size:25px;font-weight:700;fill:#0f172a;}
+      .sub{font-size:13px;fill:#64748b;}
+      .lbl{font-size:12px;font-weight:700;letter-spacing:.05em;}
+      .box{font-size:13px;font-weight:600;}
+      .sm{font-size:11px;fill:#475569;}
+      .num{font-size:11px;font-weight:700;}
+    </style>
+  </defs>
+
+  <text x="660" y="36" text-anchor="middle" class="t h1">href-langs-module - Automated Cross-Backend hreflang (v2)</text>
+  <text x="660" y="60" text-anchor="middle" class="t sub">Tiered auto-mapping (deterministic → embeddings → LLM) · confidence-routed · human feedback loop · zero runtime coupling · no geo-redirects</text>
+
+  <rect x="40" y="78" width="1240" height="32" rx="8" fill="#0f172a"/>
+  <text x="660" y="99" text-anchor="middle" class="t box" fill="#fff">One hostname · pro.boehringer-ingelheim.com · path-prefixed, independent Drupal backends</text>
+
+  <!-- ============ LEFT: CLIENT ============ -->
+  <rect x="40" y="128" width="384" height="688" rx="12" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/>
+  <text x="58" y="150" class="t lbl" fill="var(--client)">hrefl_client · EVERY BACKEND (×4)</text>
+
+  <!-- Collector -->
+  <rect x="58" y="162" width="348" height="92" rx="9" fill="#fff" stroke="var(--client)" stroke-width="1.5"/>
+  <text x="72" y="182" class="t box" fill="var(--client)">Collector - inventory + signals</text>
+  <text x="72" y="201" class="t sm">shared/PIM IDs · schema.org @id/sameAs · existing hreflang</text>
+  <text x="72" y="218" class="t sm">title/meta/headings · slug/section · canonical</text>
+  <text x="72" y="235" class="t sm">publication + moderation state · lastmod</text>
+
+  <!-- local store -->
+  <rect x="58" y="360" width="348" height="52" rx="9" fill="#fff" stroke="var(--line)" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="72" y="381" class="t box">Local alternates store (cached)</text>
+  <text x="72" y="399" class="t sm">pre-computed · cache-tagged · hub never in request path</text>
+
+  <!-- Emitters -->
+  <rect x="58" y="440" width="348" height="150" rx="9" fill="var(--outbg)" stroke="var(--out)" stroke-width="1.5"/>
+  <text x="72" y="461" class="t box" fill="var(--out)">Emitters (read local store)</text>
+  <text x="72" y="481" class="t sm">• &lt;head&gt; hreflang link tags - reciprocal · absolute · x-default</text>
+  <text x="72" y="500" class="t sm">• own multilingual XML sitemap - xhtml:link + lastmod + priority</text>
+  <text x="72" y="519" class="t sm">• JSON-LD inLanguage / sameAs (optional)</text>
+  <text x="72" y="538" class="t sm">• HTTP Link header for non-HTML (PDF)</text>
+  <text x="72" y="562" class="t sm">one source of truth → head / sitemap / JSON-LD always agree</text>
+
+  <!-- Selector -->
+  <rect x="58" y="606" width="348" height="82" rx="9" fill="var(--navbg)" stroke="var(--nav)" stroke-width="1.6"/>
+  <text x="72" y="627" class="t box" fill="var(--nav)">Country / language selector</text>
+  <text x="72" y="646" class="t sm">crawlable &lt;a&gt; · context-preserving switch to equivalent page</text>
+  <text x="72" y="664" class="t sm">accessible (ARIA/lang) · NO IP/geo auto-redirect</text>
+
+  <!-- perf note -->
+  <rect x="58" y="704" width="348" height="70" rx="9" fill="var(--panel)" stroke="var(--border)"/>
+  <text x="72" y="725" class="t box">Performance</text>
+  <text x="72" y="744" class="t sm">≤ ~2 ms/page · 0 blocking requests · 0 CLS</text>
+  <text x="72" y="762" class="t sm">renders from last known-good if hub is down</text>
+
+  <!-- ============ CENTER: HUB / ENGINE ============ -->
+  <rect x="460" y="128" width="436" height="688" rx="12" fill="var(--hubbg)" stroke="var(--hub)" stroke-width="1.8"/>
+  <text x="478" y="150" class="t lbl" fill="var(--hub)">hrefl_hub · GLOBAL BACKEND - MAPPING ENGINE</text>
+
+  <!-- Ingest -->
+  <rect x="478" y="162" width="400" height="50" rx="9" fill="#fff" stroke="var(--hub)" stroke-width="1.3"/>
+  <text x="492" y="182" class="t box">Ingest - validate · detect deltas</text>
+  <text x="492" y="200" class="t sm">URL-ownership enforced (backend may only claim its own prefix)</text>
+
+  <!-- Engine container -->
+  <rect x="478" y="224" width="400" height="322" rx="10" fill="#fff" stroke="var(--hub)" stroke-width="1.8"/>
+  <text x="492" y="245" class="t box" fill="var(--hub)">Tiered matching · async · event-driven + reconciled</text>
+
+  <rect x="494" y="256" width="368" height="58" rx="8" fill="#eef2ff" stroke="var(--hub)" stroke-width="1"/>
+  <text x="506" y="275" class="t box">Tier A · deterministic</text>
+  <text x="506" y="293" class="t sm">shared IDs · schema.org · existing hreflang · slug glossary</text>
+  <text x="506" y="308" class="t sm">exact + explainable → confidence 1.0</text>
+
+  <rect x="494" y="320" width="368" height="54" rx="8" fill="#eef2ff" stroke="var(--hub)" stroke-width="1"/>
+  <text x="506" y="339" class="t box">Tier B · cross-lingual embeddings</text>
+  <text x="506" y="357" class="t sm">multilingual vectors · ANN candidate search · self-hosted</text>
+
+  <rect x="494" y="380" width="368" height="60" rx="8" fill="var(--aibg)" stroke="var(--ai)" stroke-width="1.2"/>
+  <text x="506" y="399" class="t box" fill="var(--ai)">Tier C · LLM adjudication (ambiguous only)</text>
+  <text x="506" y="417" class="t sm">Copilot | Anthropic · adjudicate (or "none") + translate</text>
+  <text x="506" y="432" class="t sm">low-temp · schema-validated · never invents URLs</text>
+
+  <rect x="494" y="446" width="368" height="44" rx="8" fill="#fff" stroke="var(--hub)" stroke-width="1.3"/>
+  <text x="506" y="465" class="t box" fill="var(--hub)">Confidence router</text>
+  <text x="506" y="482" class="t sm">high → auto-confirm  ·  mid → review  ·  low → hold</text>
+
+  <rect x="494" y="496" width="368" height="40" rx="8" fill="var(--panel)" stroke="var(--border)"/>
+  <text x="506" y="521" class="t sm">Triggers: entity CRUD · moderation · sitemap lastmod · queue workers</text>
+
+  <!-- Registry -->
+  <rect x="478" y="558" width="400" height="58" rx="9" fill="#fff" stroke="var(--hub)" stroke-width="2"/>
+  <text x="492" y="578" class="t box" fill="var(--hub)">Registry - versioned translation groups (source of truth)</text>
+  <text x="492" y="597" class="t sm">reciprocity guaranteed by shared group · audit + rollback</text>
+
+  <!-- Distributor -->
+  <rect x="478" y="628" width="400" height="54" rx="9" fill="#fff" stroke="var(--hub)" stroke-width="1.3"/>
+  <text x="492" y="648" class="t box">Distributor - pre-compute per-URL alternates</text>
+  <text x="492" y="666" class="t sm">absolute · valid codes · one x-default · confirmed + valid only</text>
+
+  <!-- ============ RIGHT: AI / EDITOR / MONITOR ============ -->
+  <!-- AI providers -->
+  <rect x="936" y="162" width="344" height="150" rx="12" fill="var(--aibg)" stroke="var(--ai)" stroke-width="1.5"/>
+  <text x="954" y="184" class="t lbl" fill="var(--ai)">AI PROVIDERS (Tier C) - either, both supported</text>
+  <rect x="952" y="196" width="312" height="48" rx="8" fill="#fff" stroke="var(--ai)" stroke-width="1.3"/>
+  <text x="966" y="216" class="t box" fill="var(--ai)">Anthropic API</text>
+  <text x="966" y="233" class="t sm">approved · region-resident · retention off</text>
+  <rect x="952" y="250" width="312" height="48" rx="8" fill="#fff" stroke="var(--ai)" stroke-width="1.3"/>
+  <text x="966" y="270" class="t box" fill="var(--ai)">Copilot API</text>
+  <text x="966" y="287" class="t sm">approved · region-resident · retention off</text>
+
+  <!-- Editor / feedback -->
+  <rect x="936" y="330" width="344" height="150" rx="12" fill="var(--humanbg)" stroke="var(--human)" stroke-width="1.6"/>
+  <text x="954" y="352" class="t lbl" fill="var(--human)">REVIEW &amp; FEEDBACK · editor / SEO</text>
+  <rect x="952" y="364" width="312" height="100" rx="8" fill="#fff" stroke="var(--human)" stroke-width="1.3"/>
+  <text x="966" y="384" class="t box" fill="var(--human)">Download CSV → review → upload</text>
+  <text x="966" y="403" class="t sm">in-app queue: previews · confidence · bulk actions</text>
+  <text x="966" y="421" class="t sm">confirm / reject / regroup / pin / do-not-map</text>
+  <text x="966" y="439" class="t sm">feedback loop → grows glossary, tunes thresholds</text>
+  <text x="966" y="457" class="t sm">only confirmed rows go live · audit trail</text>
+
+  <!-- Monitor -->
+  <rect x="936" y="498" width="344" height="150" rx="12" fill="var(--monbg)" stroke="var(--mon)" stroke-width="1.6"/>
+  <text x="954" y="520" class="t lbl" fill="var(--mon)">MONITOR</text>
+  <rect x="952" y="532" width="312" height="100" rx="8" fill="#fff" stroke="var(--mon)" stroke-width="1.3"/>
+  <text x="966" y="552" class="t box" fill="var(--mon)">Continuous validation</text>
+  <text x="966" y="571" class="t sm">coverage % · auto-confirm precision · time-to-map</text>
+  <text x="966" y="589" class="t sm">drift + broken/one-sided target detection</text>
+  <text x="966" y="607" class="t sm">Google Search Console signals</text>
+  <text x="966" y="625" class="t sm">dashboard + alerts (off request path)</text>
+
+  <!-- ============ ARROWS ============ -->
+  <!-- 1 collector -> ingest -->
+  <line x1="406" y1="200" x2="476" y2="186" stroke="var(--line)" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="410" y="164" width="60" height="17" rx="5" fill="#fff" stroke="var(--border)"/>
+  <text x="440" y="176" text-anchor="middle" class="t num" fill="var(--line)">① signals</text>
+
+  <!-- 4 distributor -> local store -->
+  <line x1="478" y1="652" x2="408" y2="392" stroke="var(--line)" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="414" y="470" width="72" height="17" rx="5" fill="#fff" stroke="var(--border)"/>
+  <text x="450" y="482" text-anchor="middle" class="t num" fill="var(--line)">④ alternates</text>
+
+  <!-- 5 store -> emitters -->
+  <line x1="150" y1="412" x2="150" y2="438" stroke="var(--line)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="158" y="430" class="t num" fill="var(--line)">⑤</text>
+  <!-- store -> selector -->
+  <line x1="300" y1="412" x2="300" y2="604" stroke="var(--line)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+  <!-- 2 tier C <-> AI providers -->
+  <line x1="862" y1="404" x2="934" y2="250" stroke="var(--ai)" stroke-width="2" marker-end="url(#arrowA)"/>
+  <line x1="934" y1="228" x2="864" y2="410" stroke="var(--ai)" stroke-width="2" marker-end="url(#arrowA)"/>
+  <rect x="866" y="300" width="72" height="17" rx="5" fill="#fff" stroke="var(--border)"/>
+  <text x="902" y="312" text-anchor="middle" class="t num" fill="var(--ai)">② adjudicate</text>
+
+  <!-- 3 router -> editor ; editor -> registry -->
+  <line x1="862" y1="468" x2="934" y2="410" stroke="var(--human)" stroke-width="2" marker-end="url(#arrowH)"/>
+  <line x1="934" y1="452" x2="864" y2="580" stroke="var(--human)" stroke-width="2" marker-end="url(#arrowH)"/>
+  <rect x="866" y="486" width="86" height="17" rx="5" fill="#fff" stroke="var(--border)"/>
+  <text x="909" y="498" text-anchor="middle" class="t num" fill="var(--human)">③ review</text>
+
+  <!-- learning dashed editor -> engine -->
+  <line x1="948" y1="464" x2="866" y2="300" stroke="var(--human)" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arrowH)"/>
+  <text x="930" y="360" class="t num" fill="var(--human)">learns</text>
+
+  <!-- monitor watches registry (dashed) -->
+  <line x1="934" y1="576" x2="882" y2="586" stroke="var(--mon)" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrowM)"/>
+
+  <!-- ============ PRINCIPLES STRIP ============ -->
+  <rect x="40" y="832" width="1240" height="42" rx="8" fill="var(--panel)" stroke="var(--border)"/>
+  <text x="60" y="849" class="t num" fill="var(--ink)">Principles</text>
+  <text x="60" y="866" class="t sm">No IP/geo redirects · Zero cross-backend calls at render · Sitemap-first at scale · Cheap-and-certain before fuzzy · Metadata-only AI via approved endpoints · Reciprocity by shared groups · Auto-confirm what's safe, review the rest, learn from every correction</text>
+</svg>
+<p class="cap"><b>How to read it (v2).</b> Each backend's <b>Collector</b> sends page inventory + matching signals to the hub (①). The <b>Mapping Engine</b> resolves equivalence in tiers - deterministic keys/glossary (A), cross-lingual embeddings (B), and an LLM (Copilot or Anthropic, both supported) that adjudicates - and can translate titles/URLs to locate equivalents for - ambiguous candidates (C, ②) - then a <b>confidence router</b> auto-confirms the safe matches, sends the middle band to editor <b>review</b> (③), and holds the rest. Editors' decisions feed a <b>learning</b> loop that grows the glossary and tunes thresholds. The <b>Registry</b> is the versioned source of truth; the <b>Distributor</b> pre-computes each backend's reciprocal alternates and pushes them to a local cached store (④), which the <b>Emitters</b> (⑤) and the crawlable, no-redirect <b>selector</b> read. The <b>Monitor</b> continuously validates coverage, drift, and broken links. Nothing calls across backends at request time.</p>
+</div>
+</body>
+</html>

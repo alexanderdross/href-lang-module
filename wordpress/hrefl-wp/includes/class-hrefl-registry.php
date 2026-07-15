@@ -1,0 +1,164 @@
+<?php
+/**
+ * The hub's translation-group registry (source of truth).
+ *
+ * Reciprocity is guaranteed by the shared-group model. Mirrors the Drupal
+ * Registry over two tables (group, member).
+ */
+
+declare(strict_types=1);
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+final class Hrefl_Registry {
+
+    private function members(): string {
+        global $wpdb;
+        return $wpdb->prefix . 'hrefl_member';
+    }
+
+    private function groups(): string {
+        global $wpdb;
+        return $wpdb->prefix . 'hrefl_group';
+    }
+
+    public function create_group(): string {
+        global $wpdb;
+        $uuid = wp_generate_uuid4();
+        $wpdb->insert($this->groups(), ['group_id' => $uuid, 'updated' => time()]);
+        return $uuid;
+    }
+
+    /**
+     * Insert or update a member keyed by its URL.
+     */
+    public function upsert_member(array $m): int {
+        global $wpdb;
+        $t = $this->members();
+        $urlHash = hash('sha256', (string) $m['url']);
+        $fields = [
+            'group_id' => (string) $m['group_id'],
+            'market'   => (string) $m['market'],
+            'lang'     => (string) ($m['language'] ?? ''),
+            'hreflang' => (string) ($m['hreflang'] ?? ''),
+            'url'      => (string) $m['url'],
+            'url_hash' => $urlHash,
+            'path_key' => self::slug((string) $m['url']),
+            'title'    => isset($m['title']) ? (string) $m['title'] : null,
+            'status'   => (string) ($m['status'] ?? 'proposed'),
+            'valid'    => (int) ($m['valid'] ?? 0),
+        ];
+        $existing = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$t} WHERE url_hash = %s", $urlHash));
+        if ($existing) {
+            $wpdb->update($t, $fields, ['id' => (int) $existing]);
+            return (int) $existing;
+        }
+        $wpdb->insert($t, $fields);
+        return (int) $wpdb->insert_id;
+    }
+
+    public function group_for_url(string $url): ?string {
+        global $wpdb;
+        $g = $wpdb->get_var($wpdb->prepare(
+            "SELECT group_id FROM {$this->members()} WHERE url_hash = %s",
+            hash('sha256', $url)
+        ));
+        return $g ?: null;
+    }
+
+    public function member_by_url(string $url): ?array {
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE url_hash = %s",
+            hash('sha256', $url)
+        ), ARRAY_A);
+        return $row ?: null;
+    }
+
+    public function members_of_group(string $group): array {
+        global $wpdb;
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE group_id = %s",
+            $group
+        ), ARRAY_A);
+    }
+
+    public function set_status(int $id, string $status): void {
+        global $wpdb;
+        $wpdb->update($this->members(), ['status' => $status], ['id' => $id]);
+    }
+
+    public function members_needing_match(int $limit = 200): array {
+        global $wpdb;
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE status IN ('proposed','held') LIMIT %d",
+            $limit
+        ), ARRAY_A);
+    }
+
+    public function members_by_slug(array $slugs, string $exclude_market): array {
+        global $wpdb;
+        $slugs = array_values(array_unique(array_filter($slugs, static fn($s) => $s !== '')));
+        if (!$slugs) {
+            return [];
+        }
+        $ph = implode(',', array_fill(0, count($slugs), '%s'));
+        $sql = "SELECT * FROM {$this->members()} WHERE path_key IN ($ph) AND market <> %s";
+        $args = array_merge($slugs, [$exclude_market]);
+        return (array) $wpdb->get_results($wpdb->prepare($sql, $args), ARRAY_A);
+    }
+
+    /**
+     * Members whose target has not been validated yet.
+     */
+    public function members_needing_validation(int $limit = 100): array {
+        global $wpdb;
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE valid = 0 LIMIT %d",
+            $limit
+        ), ARRAY_A);
+    }
+
+    public function set_valid(int $id, bool $valid): void {
+        global $wpdb;
+        $wpdb->update($this->members(), ['valid' => $valid ? 1 : 0], ['id' => $id]);
+    }
+
+    public function confirmed_for_market(string $market): array {
+        global $wpdb;
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE market = %s AND status = 'confirmed' AND valid = 1",
+            $market
+        ), ARRAY_A);
+    }
+
+    public function all_needing_review(int $limit = 500): array {
+        return $this->members_needing_match($limit);
+    }
+
+    public function delete_empty_groups(): void {
+        global $wpdb;
+        $wpdb->query(
+            "DELETE g FROM {$this->groups()} g
+             LEFT JOIN {$this->members()} m ON m.group_id = g.group_id
+             WHERE m.id IS NULL"
+        );
+    }
+
+    public function load_member(int $id): ?array {
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->members()} WHERE id = %d", $id), ARRAY_A);
+        return $row ?: null;
+    }
+
+    /**
+     * Leaf slug of a URL (for URL-pattern matching).
+     */
+    public static function slug(string $url): string {
+        $path = (string) wp_parse_url($url, PHP_URL_PATH);
+        $parts = array_values(array_filter(explode('/', $path), static fn($s) => $s !== ''));
+        return $parts ? strtolower(rawurldecode(end($parts))) : '';
+    }
+}

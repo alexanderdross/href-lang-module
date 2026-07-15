@@ -1,0 +1,8 @@
+name: 'Hreflang Hub'
+type: module
+description: 'Runs on the Global backend only: the translation-group registry (source of truth), the tiered auto-mapping engine (deterministic, embeddings, LLM), the CSV review loop, and the ingest/serve API.'
+package: 'SEO'
+core_version_requirement: '^10.3 || ^11'
+configure: hrefl_hub.settings
+dependencies:
+  - drupal:system
