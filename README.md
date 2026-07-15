@@ -1,5 +1,7 @@
 # hrefl — cross-site hreflang
 
+[![CI](https://github.com/alexanderdross/href-lang-module/actions/workflows/ci.yml/badge.svg)](https://github.com/alexanderdross/href-lang-module/actions/workflows/ci.yml)
+
 Cross-site `hreflang` for a family of independent country sites: a **client** on
 every site and a **hub** on one, connected by a signed API. It emits reciprocal
 `hreflang` tags, a multilingual XML sitemap, and a country/language selector.
