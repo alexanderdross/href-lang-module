@@ -31,6 +31,10 @@ Every pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 These checks must pass before a PR can be merged.
 
+## Related
+
+Marketing website (Next.js, Cloudflare-hosted): https://github.com/alexanderdross/hrefl
+
 ## License
 
 GPL-2.0-or-later.
