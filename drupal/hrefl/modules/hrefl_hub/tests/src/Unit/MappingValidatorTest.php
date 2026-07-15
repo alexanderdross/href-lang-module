@@ -51,7 +51,7 @@ final class MappingValidatorTest extends UnitTestCase {
   /**
    * @covers ::validateMemberSet
    */
-  public function testTwoXDefaultsAreReported(): void {
+  public function testTwoXdefaultsAreReported(): void {
     $members = [
       ['hreflang' => 'x-default', 'url' => 'https://ex.com/a'],
       ['hreflang' => 'x-default', 'url' => 'https://ex.com/b'],

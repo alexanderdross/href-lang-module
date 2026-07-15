@@ -39,10 +39,7 @@ jobs:
           echo "$(composer global config bin-dir --absolute)" >> "$GITHUB_PATH"
 
       - name: PHPCS (Drupal + DrupalPractice)
-        run: |
-          phpcs --standard=Drupal,DrupalPractice \
-            --extensions=php,module,inc,install,test,yml \
-            drupal/hrefl
+        run: phpcs --standard=drupal/hrefl/phpcs.xml.dist drupal/hrefl
 
   # ------------------------------------------------------------------ #
   # WordPress: standalone PHPUnit unit suite (no WordPress needed).     #
@@ -91,16 +88,28 @@ jobs:
         working-directory: drupal
         run: |
           composer config --no-plugins allow-plugins true
-          composer require --dev --no-interaction --no-progress drupal/core-dev:^11
+          composer require --dev --no-interaction --no-progress -W drupal/core-dev:^11
           mkdir -p web/modules/custom
           cp -R "$GITHUB_WORKSPACE/module/drupal/hrefl" web/modules/custom/hrefl
+          # Writable location for the kernel-test SQLite database. Language
+          # module tests open the bootstrap DB during container build, so it
+          # must exist before PHPUnit runs.
+          mkdir -p web/sites/default/files
+          chmod -R 0777 web/sites/default/files
 
       - name: PHPUnit (unit + kernel)
         working-directory: drupal
         env:
-          SIMPLETEST_DB: "sqlite://localhost/sites/default/files/test.sqlite"
+          # Absolute path (double slash after localhost) so it resolves against
+          # the web root regardless of the job's working directory.
+          SIMPLETEST_DB: "sqlite://localhost/${{ github.workspace }}/drupal/web/sites/default/files/test.sqlite"
           SYMFONY_DEPRECATIONS_HELPER: disabled
         run: |
+          # Separate --group flags (comma-separated is a PHPUnit runner warning,
+          # and core's config sets failOnWarning). Real warnings still gate;
+          # forward-compat deprecations about future Drupal versions do not.
           ./vendor/bin/phpunit -c web/core/phpunit.xml.dist \
-            --testsuite unit,kernel \
-            --group hrefl_client,hrefl_hub
+            --group hrefl_client --group hrefl_hub \
+            --do-not-fail-on-deprecation \
+            --do-not-fail-on-phpunit-deprecation \
+            web/modules/custom/hrefl
