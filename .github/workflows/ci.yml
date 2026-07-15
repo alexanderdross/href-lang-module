@@ -105,6 +105,11 @@ jobs:
           SIMPLETEST_DB: "sqlite://localhost/${{ github.workspace }}/drupal/web/sites/default/files/test.sqlite"
           SYMFONY_DEPRECATIONS_HELPER: disabled
         run: |
+          # Separate --group flags (comma-separated is a PHPUnit runner warning,
+          # and core's config sets failOnWarning). Real warnings still gate;
+          # forward-compat deprecations about future Drupal versions do not.
           ./vendor/bin/phpunit -c web/core/phpunit.xml.dist \
-            --group hrefl_client,hrefl_hub \
+            --group hrefl_client --group hrefl_hub \
+            --do-not-fail-on-deprecation \
+            --do-not-fail-on-phpunit-deprecation \
             web/modules/custom/hrefl
