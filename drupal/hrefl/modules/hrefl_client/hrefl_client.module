@@ -7,6 +7,7 @@
 
 declare(strict_types=1);
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 
@@ -93,7 +94,7 @@ function hrefl_client_entity_delete(EntityInterface $entity): void {
  * near real time, rather than waiting for a full crawl.
  */
 function _hrefl_client_enqueue_change(EntityInterface $entity): void {
-  if (!($entity instanceof \Drupal\Core\Entity\ContentEntityInterface) || !$entity->hasLinkTemplate('canonical')) {
+  if (!($entity instanceof ContentEntityInterface) || !$entity->hasLinkTemplate('canonical')) {
     return;
   }
   try {

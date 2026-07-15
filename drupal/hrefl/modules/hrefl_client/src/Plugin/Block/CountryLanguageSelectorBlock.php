@@ -8,6 +8,7 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\hrefl_client\Service\HreflangEmitter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -63,7 +64,7 @@ final class CountryLanguageSelectorBlock extends BlockBase implements ContainerF
       $items[] = [
         '#type' => 'link',
         '#title' => $alt['hreflang'],
-        '#url' => \Drupal\Core\Url::fromUri($alt['href']),
+        '#url' => Url::fromUri($alt['href']),
         '#attributes' => [
           'hreflang' => $alt['hreflang'],
           'lang' => $alt['hreflang'],

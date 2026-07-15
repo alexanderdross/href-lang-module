@@ -101,7 +101,7 @@ final class HreflangValidatorTest extends UnitTestCase {
   /**
    * @covers ::clean
    */
-  public function testCleanDeduplicatesCodesAndSingleXDefault(): void {
+  public function testCleanDeduplicatesCodesAndSingleXdefault(): void {
     $cleaned = $this->validator->clean([
       ['hreflang' => 'x-default', 'href' => 'https://ex.com/about-us'],
       ['hreflang' => 'en', 'href' => 'https://ex.com/about-us'],

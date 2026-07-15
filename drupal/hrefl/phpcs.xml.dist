@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ruleset name="hrefl">
+  <description>
+    Drupal + DrupalPractice coding standards for the hrefl module.
+
+    Documentation-density sniffs are relaxed below. The module keeps class-,
+    hook- and service-level docblocks (which carry the design intent), but does
+    not require a docblock on every trivial getter, test method, or member
+    variable, nor an @return description where the typed return already says it.
+    Everything that affects correctness or Drupal API usage stays enforced.
+  </description>
+
+  <arg name="extensions" value="php,module,inc,install,test,yml"/>
+
+  <rule ref="Drupal">
+    <!-- Docblock presence is not required on every function/method. -->
+    <exclude name="Drupal.Commenting.FunctionComment.Missing"/>
+    <!-- @return description is redundant with the declared return type here. -->
+    <exclude name="Drupal.Commenting.FunctionComment.MissingReturnComment"/>
+    <exclude name="Drupal.Commenting.FunctionComment.ParamCommentNotCapital"/>
+    <!-- Member-variable docblocks not required (types are declared). -->
+    <exclude name="Drupal.Commenting.VariableComment.Missing"/>
+    <!-- Short-description formatting (single line / capital / present). -->
+    <exclude name="Drupal.Commenting.DocComment.ShortSingleLine"/>
+    <exclude name="Drupal.Commenting.DocComment.ShortNotCapital"/>
+    <exclude name="Drupal.Commenting.DocComment.MissingShort"/>
+  </rule>
+
+  <rule ref="DrupalPractice"/>
+</ruleset>

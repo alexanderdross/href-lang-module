@@ -97,8 +97,10 @@ module) are marked where they need wiring to your environment.
 
 ## Coding standards
 
-Drupal coding standards, typed properties, constructor DI. Run:
+Drupal coding standards, typed properties, constructor DI. The module ships a
+`phpcs.xml.dist` (Drupal + DrupalPractice, with documentation-density sniffs
+relaxed - see the file header for the rationale). Run from the module root:
 
 ```
-vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/hrefl
+vendor/bin/phpcs --standard=phpcs.xml.dist .
 ```
