@@ -78,14 +78,23 @@ Work in progress, tracking `docs/ROADMAP.md`:
   structurally valid (unique codes, ≤1 x-default). Remaining polish: richer
   review UX (side-by-side previews, bulk actions) and Tier-A identity signals
   (schema.org `@id`, existing hreflang) in the collector.
-- **Phase 2+ (AI mapping engine)** - the module's **own multilingual sitemap**
-  (`/hrefl/sitemap.xml`: `xhtml:link` alternates + `lastmod` + `priority`) is in
-  place, generated from the local store. Tier B embeddings and the Tier C AI
-  providers (`Copilot` / `Anthropic`, both selectable) remain marked extension
-  points.
+- **Phase 2 (AI mapping engine)** - in place. `MappingEngine` runs the full
+  tiered flow: **Tier A** deterministic (leaf-slug + learned glossary) →
+  **Tier B** cross-lingual embeddings (`EmbeddingMatcher` + `VectorStore`, ANN
+  candidate search via the `HreflEmbedding` plugin type) → **Tier C** LLM
+  adjudication over those candidates (`HreflAiMatcher` plugins - `Copilot` and
+  `Anthropic`, both fully supported and selectable), plus title/slug translation
+  (`TranslationProposer`). Confidence tiers drive auto-confirm / review / hold.
+- **Phase 3 (sitemap + hardening)** - in place. The module's **own multilingual
+  sitemap** (`/hrefl/sitemap.xml`: `xhtml:link` alternates + `lastmod` +
+  `priority`, chunked into an index beyond 50k URLs), HTTP `Link` header for
+  non-HTML, the country/language selector, and the Monitor dashboard.
 
-External integrations (hub HTTP auth/signing, AI provider keys via the `key`
-module) are marked where they need wiring to your environment.
+What is *not* code but **environment wiring**: the AI provider endpoint + API
+key (referenced by name via the `key` module) and the embedding endpoint. Until
+those are configured the engine simply runs Tier A only - which is a complete,
+shippable configuration on its own. AI is an efficiency multiplier, never a
+prerequisite.
 
 ## Key design rules (enforced here)
 
