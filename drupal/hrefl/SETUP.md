@@ -26,6 +26,12 @@ knowledge of the module and explains each command. When you’re done, follow
 - **`hrefl_hub`** → install on **one** website only (your main / Global site,
   usually the domain root). That site runs *both*.
 
+> **All your sites must be Drupal.** This module only talks to other Drupal
+> sites running the same module. There is a separate WordPress plugin, but the
+> two are **not** interoperable — you cannot have the hub on Drupal and a client
+> on WordPress. A mixed family needs one family per platform, each with its own
+> hub.
+
 ---
 
 ## 1. Download the code (on each site)
