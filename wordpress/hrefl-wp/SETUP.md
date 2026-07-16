@@ -21,10 +21,22 @@ engines and visitors always find the right language/country version.
 
 **Which site does what?**
 
-- The plugin is installed on **every** site.
+- The plugin is installed on **every** site — it is one plugin, not two. What a
+  site *does* is decided by the **Role** setting, not by what you install.
 - On **one** site (your main one) you set the role to **“Client + Hub”** — that
   site also stores the mappings and exposes the API.
 - On every other site you set the role to **“Client only”**.
+
+The Role dropdown has a third option, **“Hub only”**. Use it only if the site
+running the hub is *not itself* one of your country sites — for example a
+separate coordination site that should never emit hreflang tags of its own. If
+your main site is also a market (the usual case), you want **“Client + Hub”**.
+
+> **All your sites must be WordPress.** This plugin only talks to other
+> WordPress sites running the same plugin. There is a separate Drupal module,
+> but the two are **not** interoperable — you cannot have the hub on WordPress
+> and a client on Drupal. A mixed family needs one family per platform, each
+> with its own hub.
 
 ---
 

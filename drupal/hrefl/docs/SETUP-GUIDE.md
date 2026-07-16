@@ -42,6 +42,15 @@ hrefl comes as **two sub‑modules**:
 
 The Global/root site runs **both** (it is a normal country site *and* the hub).
 
+There is also an umbrella item called **“Hreflang Cross-Backend”** in the module
+list. It contains no code — it only groups the two above. You never need to
+enable it.
+
+> **Every site in the family must be Drupal.** A WordPress version of this
+> exists, but the two do **not** talk to each other: the hub cannot serve a
+> WordPress client, and vice versa. An all-Drupal family uses this module; an
+> all-WordPress family uses the plugin, with its own separate hub.
+
 ---
 
 ## 2. Who does what
