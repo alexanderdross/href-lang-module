@@ -3,7 +3,7 @@
  * Plugin Name:       Hreflang Cross-Site (hrefl)
  * Plugin URI:        https://github.com/boehringer-ingelheim/hrefl
  * Description:       Cross-site hreflang for a family of independent WordPress sites: a client on every site and a hub on one, connected by a signed API. Emits reciprocal hreflang tags, a multilingual sitemap, and a country/language selector.
- * Version:           0.3.2
+ * Version:           0.3.3
  * Requires at least: 6.2
  * Requires PHP:      8.0
  * Author:            Boehringer Ingelheim
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('HREFL_VERSION', '0.3.2');
+define('HREFL_VERSION', '0.3.3');
 define('HREFL_FILE', __FILE__);
 define('HREFL_DIR', plugin_dir_path(__FILE__));
 define('HREFL_REST_NS', 'hrefl/v1');

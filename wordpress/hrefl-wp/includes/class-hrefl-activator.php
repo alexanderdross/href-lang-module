@@ -69,6 +69,7 @@ final class Hrefl_Activator {
             title text NULL,
             status varchar(16) NOT NULL DEFAULT 'proposed',
             valid tinyint(1) NOT NULL DEFAULT 0,
+            confidence float NOT NULL DEFAULT 0,
             changed bigint(20) NOT NULL DEFAULT 0,
             last_matched bigint(20) NOT NULL DEFAULT 0,
             PRIMARY KEY  (id),

@@ -121,7 +121,8 @@ final class Hrefl_Plugin {
         // the group), so a bad proposal can never go live automatically.
         if (Hrefl_Settings::get('auto_confirm')) {
             $actions = new Hrefl_Review_Actions($registry);
-            foreach ($registry->proposed_valid_members(200) as $m) {
+            $min = (float) Hrefl_Settings::get('auto_confirm_min_confidence', 0.9);
+            foreach ($registry->proposed_valid_members(200, $min) as $m) {
                 $actions->confirm((int) $m['id']);
             }
         }
