@@ -26,6 +26,9 @@ final class Hrefl_Admin {
     public function register(): void {
         add_action('admin_menu', [$this, 'menu']);
         add_filter('admin_footer_text', [$this, 'footer_text']);
+        // CSV export streams a file and exits, so it runs on admin-post rather
+        // than inside a settings-page render.
+        add_action('admin_post_hrefl_csv_export', [$this, 'csv_export']);
     }
 
     public function menu(): void {
@@ -39,6 +42,8 @@ final class Hrefl_Admin {
         );
         if (Hrefl_Settings::is_hub()) {
             $this->pages[] = add_submenu_page('hrefl', __('Review queue', 'hrefl'), __('Review queue', 'hrefl'), 'manage_options', 'hrefl-review', [$this, 'render_review']);
+            $this->pages[] = add_submenu_page('hrefl', __('CSV review', 'hrefl'), __('CSV review', 'hrefl'), 'manage_options', 'hrefl-csv', [$this, 'render_csv']);
+            $this->pages[] = add_submenu_page('hrefl', __('Health', 'hrefl'), __('Health', 'hrefl'), 'manage_options', 'hrefl-health', [$this, 'render_health']);
         }
     }
 
@@ -205,27 +210,188 @@ final class Hrefl_Admin {
      * Apply a confirm/reject with the correctness guard.
      */
     private function act(int $id, string $op): string {
-        $member = $this->registry->load_member($id);
-        if (!$member) {
-            return __('Member not found.', 'hrefl');
-        }
+        $actions = new Hrefl_Review_Actions($this->registry);
         if ($op === 'reject') {
-            $this->registry->set_status($id, 'rejected');
-            return __('Mapping rejected.', 'hrefl');
+            return $actions->reject($id)
+                ? __('Mapping rejected.', 'hrefl')
+                : __('Member not found.', 'hrefl');
         }
         if ($op === 'confirm') {
-            if ((int) $member['valid'] !== 1) {
-                return __('Cannot confirm: target is not validated.', 'hrefl');
-            }
-            foreach ($this->registry->members_of_group((string) $member['group_id']) as $sib) {
-                if ((int) $sib['id'] !== $id && $sib['status'] === 'confirmed' && $sib['hreflang'] === $member['hreflang']) {
-                    return __('Cannot confirm: another confirmed member already uses this hreflang code.', 'hrefl');
-                }
-            }
-            $this->registry->set_status($id, 'confirmed');
-            return __('Mapping confirmed; it will publish on the next client sync.', 'hrefl');
+            $violations = $actions->confirm($id);
+            return $violations
+                ? sprintf(__('Cannot confirm: %s', 'hrefl'), implode(' ', $violations))
+                : __('Mapping confirmed; it will publish on the next client sync.', 'hrefl');
         }
         return __('Unknown action.', 'hrefl');
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* CSV review round-trip                                               */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Stream the review CSV as a download (admin-post handler).
+     */
+    public function csv_export(): void {
+        if (!current_user_can('manage_options')
+            || !isset($_GET['_wpnonce'])
+            || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'hrefl_csv')) {
+            wp_die(esc_html__('Unauthorized.', 'hrefl'));
+        }
+        $csv = (new Hrefl_Csv($this->registry, new Hrefl_Review_Actions($this->registry)))->export();
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="hrefl-mapping.csv"');
+        header('Content-Length: ' . strlen($csv));
+        echo $csv; // phpcs:ignore WordPress.Security.EscapeOutput -- raw CSV body.
+        exit;
+    }
+
+    /**
+     * The CSV review page: download link + upload-to-apply form.
+     */
+    public function render_csv(): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $result = null;
+        if (isset($_POST['hrefl_csv_nonce'])
+            && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['hrefl_csv_nonce'])), 'hrefl_csv_import')
+            && isset($_FILES['hrefl_csv']) && is_array($_FILES['hrefl_csv'])) {
+            $result = $this->handle_csv_upload($_FILES['hrefl_csv']);
+        }
+        $export_url = wp_nonce_url(admin_url('admin-post.php?action=hrefl_csv_export'), 'hrefl_csv');
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Hreflang CSV review', 'hrefl'); ?></h1>
+            <p><?php esc_html_e('Download every mapping, set the "decision" column to confirm / reject / leave, then upload the file back. Only confirmed rows go live, and each confirm passes the same correctness guard as the on-screen queue.', 'hrefl'); ?></p>
+
+            <h2><?php esc_html_e('1. Download', 'hrefl'); ?></h2>
+            <p><a class="button button-primary" href="<?php echo esc_url($export_url); ?>"><?php esc_html_e('Export mapping CSV', 'hrefl'); ?></a></p>
+
+            <h2><?php esc_html_e('2. Review &amp; upload', 'hrefl'); ?></h2>
+            <?php if ($result !== null) : ?>
+                <div class="notice notice-info"><p>
+                    <?php echo esc_html(sprintf(
+                        /* translators: 1: applied count, 2: skipped count, 3: blocked count. */
+                        __('Applied %1$d, left unchanged %2$d, blocked %3$d.', 'hrefl'),
+                        $result['applied'],
+                        $result['skipped'],
+                        count($result['blocked'])
+                    )); ?>
+                </p>
+                <?php if (!empty($result['blocked'])) : ?>
+                    <ul style="list-style:disc;margin-left:2em;">
+                    <?php foreach ($result['blocked'] as $url => $why) : ?>
+                        <li><code><?php echo esc_html((string) $url); ?></code> - <?php echo esc_html(implode(' ', (array) $why)); ?></li>
+                    <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            <form method="post" enctype="multipart/form-data">
+                <?php wp_nonce_field('hrefl_csv_import', 'hrefl_csv_nonce'); ?>
+                <input type="file" name="hrefl_csv" accept=".csv,text/csv" required />
+                <?php submit_button(__('Upload &amp; apply decisions', 'hrefl')); ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Validate an uploaded CSV and apply it.
+     *
+     * @param array<string,mixed> $file
+     *   A single $_FILES entry.
+     *
+     * @return array{applied:int,skipped:int,blocked:array<string,string[]>}
+     */
+    private function handle_csv_upload(array $file): array {
+        $empty = ['applied' => 0, 'skipped' => 0, 'blocked' => []];
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            return $empty;
+        }
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        // Only accept a genuine PHP upload, and cap the size to a sane ceiling.
+        if ($tmp === '' || !is_uploaded_file($tmp) || (int) ($file['size'] ?? 0) > 5 * 1024 * 1024) {
+            return $empty;
+        }
+        $csv = (string) file_get_contents($tmp);
+        if (trim($csv) === '') {
+            return $empty;
+        }
+        return (new Hrefl_Csv($this->registry, new Hrefl_Review_Actions($this->registry)))->import($csv);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Health dashboard                                                    */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * Render the translation-graph health report.
+     */
+    public function render_health(): void {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $r = (new Hrefl_Monitor($this->registry))->report();
+        $t = $r['totals'];
+        $i = $r['issues'];
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Hreflang health', 'hrefl'); ?></h1>
+            <p>
+                <?php if ($r['healthy']) : ?>
+                    <span style="color:#227122;font-weight:600;">&#10003; <?php esc_html_e('Healthy - no structural issues found.', 'hrefl'); ?></span>
+                <?php else : ?>
+                    <span style="color:#a00;font-weight:600;">&#9888; <?php esc_html_e('Issues found - see below. Fix them in the review queue or CSV.', 'hrefl'); ?></span>
+                <?php endif; ?>
+            </p>
+
+            <h2><?php esc_html_e('Coverage', 'hrefl'); ?></h2>
+            <p><strong><?php echo esc_html(number_format((float) $r['coverage'] * 100, 1)); ?>%</strong>
+               <?php esc_html_e('of eligible members are confirmed with a valid target.', 'hrefl'); ?></p>
+
+            <h2><?php esc_html_e('Totals', 'hrefl'); ?></h2>
+            <table class="widefat striped" style="max-width:32em;">
+                <tbody>
+                    <tr><td><?php esc_html_e('Groups', 'hrefl'); ?></td><td><?php echo (int) $t['groups']; ?></td></tr>
+                    <tr><td><?php esc_html_e('Members', 'hrefl'); ?></td><td><?php echo (int) $t['members']; ?></td></tr>
+                    <tr><td><?php esc_html_e('Confirmed', 'hrefl'); ?></td><td><?php echo (int) $t['confirmed']; ?></td></tr>
+                    <tr><td><?php esc_html_e('Proposed', 'hrefl'); ?></td><td><?php echo (int) $t['proposed']; ?></td></tr>
+                    <tr><td><?php esc_html_e('Rejected', 'hrefl'); ?></td><td><?php echo (int) $t['rejected']; ?></td></tr>
+                </tbody>
+            </table>
+
+            <h2><?php esc_html_e('Issues', 'hrefl'); ?></h2>
+            <table class="widefat striped" style="max-width:40em;">
+                <tbody>
+                    <tr><td><?php esc_html_e('Confirmed targets that failed validation', 'hrefl'); ?></td><td><?php echo count($i['invalid_targets']); ?></td></tr>
+                    <tr><td><?php esc_html_e('hreflang code collisions in a group', 'hrefl'); ?></td><td><?php echo count($i['code_collisions']); ?></td></tr>
+                    <tr><td><?php esc_html_e('Groups with no x-default (no Global member)', 'hrefl'); ?></td><td><?php echo count($i['missing_x_default']); ?></td></tr>
+                    <tr><td><?php esc_html_e('Confirmed members with nothing to link to', 'hrefl'); ?></td><td><?php echo count($i['lonely_confirmed']); ?></td></tr>
+                </tbody>
+            </table>
+
+            <?php if (!empty($i['invalid_targets'])) : ?>
+                <h3><?php esc_html_e('Invalid targets', 'hrefl'); ?></h3>
+                <ul style="list-style:disc;margin-left:2em;">
+                    <?php foreach (array_slice($i['invalid_targets'], 0, 50) as $bad) : ?>
+                        <li><code><?php echo esc_html($bad['hreflang']); ?></code> - <?php echo esc_html($bad['url']); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+
+            <?php if (!empty($i['code_collisions'])) : ?>
+                <h3><?php esc_html_e('Code collisions', 'hrefl'); ?></h3>
+                <ul style="list-style:disc;margin-left:2em;">
+                    <?php foreach (array_slice($i['code_collisions'], 0, 50) as $c) : ?>
+                        <li><code><?php echo esc_html((string) $c['hreflang']); ?></code>: <?php echo esc_html(implode(', ', (array) $c['urls'])); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </div>
+        <?php
     }
 
     /* ------------------------------------------------------------------ */

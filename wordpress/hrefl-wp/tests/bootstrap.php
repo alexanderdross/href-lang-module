@@ -89,3 +89,6 @@ require_once $plugin . '/includes/class-hrefl-rest.php';
 require_once $plugin . '/includes/class-hrefl-vector-store.php';
 require_once $plugin . '/includes/class-hrefl-embedding-matcher.php';
 require_once $plugin . '/includes/class-hrefl-ai-matcher.php';
+require_once $plugin . '/includes/class-hrefl-review-actions.php';
+require_once $plugin . '/includes/class-hrefl-csv.php';
+require_once $plugin . '/includes/class-hrefl-monitor.php';
