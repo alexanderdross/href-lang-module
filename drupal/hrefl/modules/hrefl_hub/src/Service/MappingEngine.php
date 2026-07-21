@@ -130,7 +130,12 @@ final class MappingEngine {
     if ($memberId === NULL) {
       return;
     }
-    if ($autoConfirm && $confidence >= $confirm) {
+    // Auto-confirm only a confident match that does not collide: never let the
+    // engine confirm a second member for an hreflang code already confirmed in
+    // the group (the same guard ReviewActions applies to a human confirm). A
+    // collision routes to review instead of going live. Serve-time still gates
+    // on validity, so an unvalidated target stays invisible until it passes.
+    if ($autoConfirm && $confidence >= $confirm && !$this->hreflangCollides($memberId)) {
       $this->registry->setStatus($memberId, 'confirmed', 'engine');
     }
     elseif ($confidence < $floor) {
@@ -139,6 +144,39 @@ final class MappingEngine {
     else {
       $this->registry->setStatus($memberId, 'proposed', 'engine');
     }
+  }
+
+  /**
+   * Whether confirming this member would duplicate an hreflang code already
+   * confirmed in its group. Conservative: an unknown member "collides" so it is
+   * never auto-confirmed.
+   */
+  private function hreflangCollides(int $memberId): bool {
+    $member = $this->registry->loadMember($memberId);
+    if ($member === NULL) {
+      return TRUE;
+    }
+    return self::collides($member, $this->registry->membersOfGroup((string) $member['group_uuid']));
+  }
+
+  /**
+   * Whether confirming $member duplicates an hreflang code already confirmed by
+   * another member of its group. Pure for testability.
+   *
+   * @param array $member
+   *   The member being confirmed (needs 'id', 'hreflang').
+   * @param array $groupMembers
+   *   All members of the group (each needs 'id', 'status', 'hreflang').
+   */
+  public static function collides(array $member, array $groupMembers): bool {
+    foreach ($groupMembers as $m) {
+      if ((int) $m['id'] !== (int) $member['id']
+        && $m['status'] === 'confirmed'
+        && $m['hreflang'] === $member['hreflang']) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**

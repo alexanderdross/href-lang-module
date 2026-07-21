@@ -3,7 +3,7 @@ type: module
 description: 'Cross-backend hreflang for a family of independent, path-prefixed Drupal backends. Umbrella package for the client and hub submodules.'
 package: 'SEO'
 license: GPL-2.0-or-later
-version: '2.2.0'
+version: '2.2.1'
 # Codeless umbrella: only the submodules are meant to be enabled.
 hidden: true
 core_version_requirement: '^10.3 || ^11'
