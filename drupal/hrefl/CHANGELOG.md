@@ -7,7 +7,19 @@ current, security-reviewed line and the only one under active development. v1 is
 frozen - it stays available (git tag `v1.0.0`) as a reference, but new work lands
 on v2.
 
-## 2.2.1 - 2026-07-22 - auto-confirm collision guard (v2 · latest)
+## 2.2.2 - 2026-07-22 - selector adapter for existing switchers (v2 · latest)
+
+- **Drive an existing country/language switcher from the feed.** A new optional
+  library `hrefl_client/selector_adapter` (`js/hrefl-selector-adapter.js`) reads
+  the per-URL feed (`/hrefl/selector`) and rewrites the `href` of annotated
+  switcher links to the *equivalent* page in each language (context-preserving,
+  e.g. `/imprint/` -> `/de/impressum/`). Links with no confirmed equivalent keep
+  their existing market-home href (safe fallback); a feed error leaves every link
+  untouched. Keep your own switcher UI - annotate links with `data-hrefl-hreflang`
+  (or `data-hrefl-market` + a map) and attach the library. See
+  `docs/SELECTOR-INTEGRATION.md`.
+
+## 2.2.1 - 2026-07-22 - auto-confirm collision guard
 
 - **Auto-confirm never creates an hreflang collision.** When `auto_confirm_enabled`
   is on, the engine now confirms a confident match only if no other confirmed
