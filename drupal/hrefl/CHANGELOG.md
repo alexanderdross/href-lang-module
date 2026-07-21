@@ -87,8 +87,19 @@ PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 ### Reviewed but deliberately not changed
 
 Noted, not blocking: a nonce store for full replay prevention, streaming CSV
-export, a review-queue pager past 500 rows, DNS pinning in `TargetValidator`,
-and `HubSettingsForm` floor ≤ confirm validation.
+export, a review-queue pager past 500 rows, and `HubSettingsForm` floor ≤
+confirm validation.
+
+## 2.1.0 - 2026-07-21 - polish & SSRF pinning
+
+- **Human-readable selector labels.** The country/language block and the JSON
+  selector feed now show "English (United States)" / "Deutsch" (endonyms) via a
+  new `HreflLocale` helper, instead of the raw `en-US` code; `hreflang`/`lang`
+  stay the machine code.
+- **SSRF DNS pinning.** `TargetValidator` pins the validation fetch to the public
+  IP it just vetted (`CURLOPT_RESOLVE`), closing the TOCTOU/DNS-rebinding window
+  between the safety check and the request. Falls back to the host allowlist on
+  non-curl transports.
 
 ## 1.0.0 - 2026-07-15 - first release (v1 · original)
 

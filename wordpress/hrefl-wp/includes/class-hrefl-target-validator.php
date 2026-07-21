@@ -22,12 +22,32 @@ final class Hrefl_Target_Validator {
         if (!$this->is_safe_url($url)) {
             return false;
         }
+        // Pin the request to the vetted public IP so it cannot be re-pointed at
+        // an internal address between the check and the fetch (DNS rebinding).
+        // Only affects the curl transport; the stream transport keeps the host
+        // allowlist as its control.
+        $pin = $this->pin_for($url);
+        $pin_cb = null;
+        if ($pin !== null && function_exists('add_action')) {
+            $pin_cb = static function ($handle) use ($pin): void {
+                if (defined('CURLOPT_RESOLVE') && is_resource($handle)) {
+                    curl_setopt($handle, CURLOPT_RESOLVE, [
+                        $pin['host'] . ':443:' . $pin['ip'],
+                        $pin['host'] . ':80:' . $pin['ip'],
+                    ]);
+                }
+            };
+            add_action('http_api_curl', $pin_cb, 10, 1);
+        }
         $resp = wp_remote_get($url, [
             'redirection' => 0,
             'timeout'     => 10,
             'sslverify'   => true,
             'headers'     => ['Accept' => 'text/html'],
         ]);
+        if ($pin_cb !== null) {
+            remove_action('http_api_curl', $pin_cb, 10);
+        }
         if (is_wp_error($resp) || (int) wp_remote_retrieve_response_code($resp) !== 200) {
             return false;
         }
@@ -53,6 +73,28 @@ final class Hrefl_Target_Validator {
             }
         }
         return true;
+    }
+
+    /**
+     * The host + first vetted public IP to pin the request to, or null when
+     * there is nothing to pin (literal-IP host, no curl, or no public IP).
+     *
+     * @return array{host:string,ip:string}|null
+     */
+    private function pin_for(string $url): ?array {
+        if (!extension_loaded('curl')) {
+            return null;
+        }
+        $host = (string) wp_parse_url($url, PHP_URL_HOST);
+        if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+            return null;
+        }
+        foreach ($this->resolve_ips($host) as $ip) {
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return ['host' => $host, 'ip' => $ip];
+            }
+        }
+        return null;
     }
 
     /**
