@@ -256,14 +256,23 @@ final class Registry {
   /**
    * All confirmed, valid members for a market (used by the Distributor).
    */
-  public function confirmedMembersForMarket(string $market): array {
-    return $this->database->select('hrefl_group_member', 'm')
+  public function confirmedMembersForMarket(string $market, int $afterId = 0, int $limit = 0): array {
+    // Ordered by the serial PK so a cursor (last id seen) can page the whole
+    // market deterministically across serve requests, instead of loading every
+    // confirmed page of a large corpus into one response.
+    $query = $this->database->select('hrefl_group_member', 'm')
       ->fields('m')
       ->condition('market', $market)
       ->condition('status', 'confirmed')
       ->condition('valid', 1)
-      ->execute()
-      ->fetchAll(\PDO::FETCH_ASSOC);
+      ->orderBy('id', 'ASC');
+    if ($afterId > 0) {
+      $query->condition('id', $afterId, '>');
+    }
+    if ($limit > 0) {
+      $query->range(0, $limit);
+    }
+    return $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
   }
 
   /**

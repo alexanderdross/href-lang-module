@@ -28,6 +28,12 @@ Closing the documented condensed-port gaps, landing in stages:
     stored option). All output is a proposal - a human still confirms.
   - The matcher runs Tier A (slug) -> B -> C; cron warms embeddings first. New
     `hrefl_embedding` table and admin settings for both tiers.
+- **Cursor-paginated alternates serve** - the hub's `/alternates` REST route
+  pages a market with `?after=<id>` (`Hrefl_Distributor::serve_page`, ordered by
+  the member id), and the client walks the `next` cursor and accumulates every
+  page before one atomic store swap. A large market is never built, serialized,
+  or transferred in a single response; the client caps the walk at 500 pages so
+  a hostile cursor cannot loop. Small sites still resolve in one page.
 
 ## 0.2.0 - 2026-07-21 - security & scale hardening
 

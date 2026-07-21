@@ -157,12 +157,18 @@ final class Hrefl_Registry {
         $wpdb->update($this->members(), ['valid' => $valid ? 1 : 0], ['id' => $id]);
     }
 
-    public function confirmed_for_market(string $market): array {
+    public function confirmed_for_market(string $market, int $after_id = 0, int $limit = 0): array {
         global $wpdb;
-        return (array) $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$this->members()} WHERE market = %s AND status = 'confirmed' AND valid = 1",
-            $market
-        ), ARRAY_A);
+        // Ordered by the auto-increment PK so a cursor (last id seen) can page
+        // the whole market across serve requests, instead of loading every
+        // confirmed page of a large corpus into one response.
+        $sql = "SELECT * FROM {$this->members()} WHERE market = %s AND status = 'confirmed' AND valid = 1 AND id > %d ORDER BY id ASC";
+        $params = [$market, $after_id];
+        if ($limit > 0) {
+            $sql .= ' LIMIT %d';
+            $params[] = $limit;
+        }
+        return (array) $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
     }
 
     public function all_needing_review(int $limit = 500): array {
