@@ -54,6 +54,10 @@ final class Hrefl_Settings {
             'embedding_threshold' => 0.82,
             // Without AI: join the top embedding candidate above this score.
             'embedding_autojoin'  => 0.9,
+            // Opt-out of human review: when set, the hub auto-confirms matched
+            // mappings (still only if the target validated and there is no
+            // hreflang collision). Default OFF - keep a human in the loop.
+            'auto_confirm'        => 0,
         ];
         return array_merge($defaults, (array) get_option(self::OPTION, []));
     }

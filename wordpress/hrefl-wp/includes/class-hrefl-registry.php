@@ -242,6 +242,22 @@ final class Hrefl_Registry {
     }
 
     /**
+     * Proposed members whose target has already validated, oldest first.
+     *
+     * The candidate set for the optional auto-confirm pass; the confirm guard
+     * still applies the no-collision check per member.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function proposed_valid_members(int $limit = 200): array {
+        global $wpdb;
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->members()} WHERE status = 'proposed' AND valid = 1 ORDER BY id ASC LIMIT %d",
+            $limit
+        ), ARRAY_A);
+    }
+
+    /**
      * Leaf slug of a URL (for URL-pattern matching).
      */
     public static function slug(string $url): string {
