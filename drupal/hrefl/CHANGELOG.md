@@ -7,7 +7,16 @@ current, security-reviewed line and the only one under active development. v1 is
 frozen - it stays available (git tag `v1.0.0`) as a reference, but new work lands
 on v2.
 
-## 2.2.2 - 2026-07-22 - selector adapter for existing switchers (v2 · latest)
+## 2.2.3 - 2026-07-22 - resilient AI/embedding calls (v2 · latest)
+
+- **Retry with backoff on the AI and embedding providers.** A transport error or
+  a transient status (429/500/502/503/504) is now retried up to twice with
+  exponential backoff, honoring a server `Retry-After`; a 4xx (e.g. bad key)
+  still fails fast. So a single rate-limit or blip no longer drops a whole
+  matching batch. New `Http\Backoff` (pure policy, unit-tested) + `Http\RetriesHttp`
+  trait used by both provider bases (Copilot, Anthropic, HTTP embedding).
+
+## 2.2.2 - 2026-07-22 - selector adapter for existing switchers
 
 - **Drive an existing country/language switcher from the feed.** A new optional
   library `hrefl_client/selector_adapter` (`js/hrefl-selector-adapter.js`) reads

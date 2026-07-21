@@ -66,7 +66,7 @@ final class Copilot extends AiMatcherBase {
   private function chat(string $system, string $user): ?string {
     $s = $this->providerSettings();
     try {
-      $response = $this->httpClient->request('POST', $s['endpoint'], [
+      $response = $this->requestWithRetry('POST', $s['endpoint'], [
         'headers' => [
           'authorization' => 'Bearer ' . $this->apiKey(),
           'content-type' => 'application/json',

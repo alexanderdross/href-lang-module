@@ -8,6 +8,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hrefl_hub\Http\RetriesHttp;
 use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class EmbeddingProviderBase extends PluginBase implements EmbeddingProviderInterface, ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
+  use RetriesHttp;
 
   public function __construct(
     array $configuration,

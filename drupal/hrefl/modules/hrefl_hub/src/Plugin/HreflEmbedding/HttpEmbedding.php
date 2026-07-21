@@ -48,7 +48,7 @@ final class HttpEmbedding extends EmbeddingProviderBase {
       $headers['authorization'] = 'Bearer ' . $key;
     }
     try {
-      $response = $this->httpClient->request('POST', $s['endpoint'], [
+      $response = $this->requestWithRetry('POST', $s['endpoint'], [
         'headers' => $headers,
         'json' => ['model' => $s['model'], 'input' => $texts],
         'timeout' => 30,

@@ -2,6 +2,15 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
+## 0.3.2 - 2026-07-22 - resilient AI/embedding calls
+
+- **Retry with backoff on the AI and embedding requests.** A transport error or
+  a transient status (429/500/502/503/504) is retried up to twice with
+  exponential backoff, honoring a server `Retry-After`; a 4xx still fails fast.
+  A single rate-limit or blip no longer drops a whole matching batch. New
+  `Hrefl_Http` helper (pure `retriable`/`backoff_delay`, unit-tested) wraps the
+  AI adjudication and embedding calls. Mirrors the Drupal `Backoff`/`RetriesHttp`.
+
 ## 0.3.1 - 2026-07-22 - optional auto-confirm (opt-out of manual review)
 
 - **Auto-confirm setting** - a new hub checkbox, **off by default**, under a
