@@ -14,14 +14,22 @@ if (!defined('ABSPATH')) {
 
 final class Hrefl_Admin {
 
+    /**
+     * Screen hook suffixes of this plugin's own admin pages.
+     *
+     * @var string[]
+     */
+    private array $pages = [];
+
     public function __construct(private Hrefl_Registry $registry) {}
 
     public function register(): void {
         add_action('admin_menu', [$this, 'menu']);
+        add_filter('admin_footer_text', [$this, 'footer_text']);
     }
 
     public function menu(): void {
-        add_menu_page(
+        $this->pages[] = add_menu_page(
             __('Hreflang', 'hrefl'),
             __('Hreflang', 'hrefl'),
             'manage_options',
@@ -30,8 +38,20 @@ final class Hrefl_Admin {
             'dashicons-translation'
         );
         if (Hrefl_Settings::is_hub()) {
-            add_submenu_page('hrefl', __('Review queue', 'hrefl'), __('Review queue', 'hrefl'), 'manage_options', 'hrefl-review', [$this, 'render_review']);
+            $this->pages[] = add_submenu_page('hrefl', __('Review queue', 'hrefl'), __('Review queue', 'hrefl'), 'manage_options', 'hrefl-review', [$this, 'render_review']);
         }
+    }
+
+    /**
+     * Replaces the admin footer text with a Dross:Media credit — only on this
+     * plugin's own pages, so the rest of wp-admin is untouched.
+     */
+    public function footer_text($text) {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen && in_array($screen->id, $this->pages, true)) {
+            return 'Made with &hearts; by <a href="https://dross.net/media/?hreflang" target="_blank" rel="noopener">Dross:Media</a>';
+        }
+        return $text;
     }
 
     /* ------------------------------------------------------------------ */
