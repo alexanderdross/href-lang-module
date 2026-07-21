@@ -51,6 +51,45 @@ final class Hrefl_Review_Actions {
             }
         }
         $this->registry->set_status($id, 'confirmed');
+        // Feedback loop: turn this confirmed equivalence into glossary entries so
+        // the next Tier-A pass bridges these slugs deterministically.
+        $confirmed_siblings = array_values(array_filter(
+            $this->registry->members_of_group((string) $member['group_id']),
+            static fn(array $s): bool => (int) $s['id'] !== $id && $s['status'] === 'confirmed'
+        ));
+        foreach (self::glossary_pairs($member, $confirmed_siblings) as $p) {
+            $this->registry->add_glossary_entry($p[0], $p[1], $p[2], $p[3]);
+        }
         return [];
+    }
+
+    /**
+     * The cross-language slug pairs to learn from a confirmed member and its
+     * confirmed siblings, both directions. Pure for testability.
+     *
+     * @param array<string,mixed>              $member
+     * @param array<int,array<string,mixed>>   $siblings
+     *
+     * @return array<int,array{0:string,1:string,2:string,3:string}>
+     *   [source_lang, target_lang, source_token, target_token] tuples.
+     */
+    public static function glossary_pairs(array $member, array $siblings): array {
+        $lang = (string) ($member['lang'] ?? '');
+        $slug = (string) ($member['path_key'] ?? '');
+        if ($lang === '' || $slug === '') {
+            return [];
+        }
+        $pairs = [];
+        foreach ($siblings as $sib) {
+            $sib_lang = (string) ($sib['lang'] ?? '');
+            $sib_slug = (string) ($sib['path_key'] ?? '');
+            // Only cross-language pairs with distinct slugs teach anything new.
+            if ($sib_lang === '' || $sib_slug === '' || $sib_lang === $lang || $sib_slug === $slug) {
+                continue;
+            }
+            $pairs[] = [$lang, $sib_lang, $slug, $sib_slug];
+            $pairs[] = [$sib_lang, $lang, $sib_slug, $slug];
+        }
+        return $pairs;
     }
 }

@@ -93,9 +93,24 @@ final class Hrefl_Activator {
             KEY market (market)
         ) $charset;";
 
+        // Learned slug glossary that bridges Tier-A matching across languages
+        // (about-us <-> ueber-uns), grown from confirmations.
+        $glo = "CREATE TABLE {$p}hrefl_glossary (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            source_lang varchar(12) NOT NULL,
+            target_lang varchar(12) NOT NULL,
+            source_token varchar(191) NOT NULL,
+            target_token varchar(191) NOT NULL,
+            weight float NOT NULL DEFAULT 1,
+            PRIMARY KEY  (id),
+            UNIQUE KEY pair (source_lang,target_lang,source_token,target_token),
+            KEY lookup (source_lang,source_token)
+        ) $charset;";
+
         dbDelta($alt);
         dbDelta($grp);
         dbDelta($mem);
         dbDelta($emb);
+        dbDelta($glo);
     }
 }

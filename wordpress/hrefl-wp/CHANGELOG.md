@@ -2,6 +2,16 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
+## 0.3.4 - 2026-07-22 - learned slug glossary (Tier-A parity)
+
+- **The glossary now learns from confirmations**, matching Drupal. When an editor
+  confirms an equivalence, each cross-language slug pair (`about-us` <-> `ueber-uns`)
+  is stored in a new `hrefl_glossary` table, both directions. Tier-A matching then
+  bridges those slugs deterministically on the next run, so repeat structures map
+  without needing Tier B/C - manual effort shrinks over time. New
+  `Registry::add_glossary_entry()` / `glossary_equivalents()`, learning in
+  `Hrefl_Review_Actions::confirm()`, and `GlossaryTest` for the pair logic.
+
 ## 0.3.3 - 2026-07-22 - confidence-gated auto-confirm
 
 - **Auto-confirm now honors a confidence threshold**, matching the Drupal engine.
