@@ -2,11 +2,17 @@
 
 All notable changes to the Drupal module. Dates are ISO (YYYY-MM-DD).
 
-## 0.1.1 — 2026-07-21 — security & correctness hardening
+**Versioning.** `v1` is the original module as first shipped; `v2` is the
+current, security-reviewed line and the only one under active development. v1 is
+frozen — it stays available (git tag `v1.0.0`) as a reference, but new work lands
+on v2.
 
-An external security and code-quality review (Factorial). No feature changes;
-the module's behaviour is the same, with the defects below fixed. Tests were
-updated in lockstep, and the suites stay green on Drupal 11 / PHP 8.3.
+## 2.0.0 — 2026-07-21 — security & correctness hardening (v2 · latest)
+
+The security- and code-quality-reviewed line (Factorial review). No feature
+changes versus v1; the module's behaviour is the same, with the defects below
+fixed. Tests were updated in lockstep, and the suites stay green on Drupal 11 /
+PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 
 ### ⚠️ Breaking (fresh installs only — nothing is deployed yet)
 
@@ -84,9 +90,10 @@ Noted, not blocking: a nonce store for full replay prevention, streaming CSV
 export, a review-queue pager past 500 rows, DNS pinning in `TargetValidator`,
 and `HubSettingsForm` floor ≤ confirm validation.
 
-## 0.1.0 — 2026-07-15 — first release
+## 1.0.0 — 2026-07-15 — first release (v1 · original)
 
-The complete client + hub architecture: reciprocal hreflang tags, the own
-multilingual XML sitemap, the country selector, the tiered matching engine
-(deterministic → embeddings → LLM adjudication via Copilot or Anthropic), and
-the human review loop.
+The original module, frozen at git tag `v1.0.0`. The complete client + hub
+architecture: reciprocal hreflang tags, the own multilingual XML sitemap, the
+country selector, the tiered matching engine (deterministic → embeddings → LLM
+adjudication via Copilot or Anthropic), and the human review loop. Superseded by
+v2; kept for reference only.
