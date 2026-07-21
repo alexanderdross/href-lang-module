@@ -131,6 +131,9 @@ final class Hrefl_Admin {
                         <?php esc_html_e('Skip manual review - publish matched mappings automatically', 'hrefl'); ?></label>
                         <p class="description"><strong><?php esc_html_e('Off by default (recommended): a human confirms every match before it goes live.', 'hrefl'); ?></strong>
                         <?php esc_html_e('When on, the hub auto-confirms each matched mapping on the next cron run. The correctness guard still applies - a mapping is only published once its target has validated (HTTP 200, indexable) and no other confirmed member in its group already uses that hreflang code - so a broken mapping can never go live. This removes the human-in-the-loop; enable it only once you trust the matching on your content.', 'hrefl'); ?></p></td></tr>
+                    <tr><th><?php esc_html_e('Auto-confirm confidence', 'hrefl'); ?></th>
+                        <td><input type="number" name="auto_confirm_min_confidence" value="<?php echo esc_attr($s['auto_confirm_min_confidence']); ?>" min="0" max="1" step="0.01" class="small-text">
+                        <p class="description"><?php esc_html_e('Only auto-confirm matches at or above this confidence (0-1). Deterministic slug matches score 1.0; lower-confidence AI matches stay in the review queue. Default 0.9.', 'hrefl'); ?></p></td></tr>
                     <?php endif; ?>
                 </table>
                 <?php submit_button(); ?>
@@ -158,6 +161,7 @@ final class Hrefl_Admin {
             'embedding_model'    => sanitize_text_field($post['embedding_model'] ?? ''),
             'embedding_key'      => sanitize_text_field($post['embedding_key'] ?? ''),
             'auto_confirm'       => empty($post['auto_confirm']) ? 0 : 1,
+            'auto_confirm_min_confidence' => max(0.0, min(1.0, (float) ($post['auto_confirm_min_confidence'] ?? 0.9))),
         ]);
         flush_rewrite_rules(false);
     }

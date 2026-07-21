@@ -56,15 +56,16 @@ final class Hrefl_Matcher {
             $verdict = $ai->adjudicate($this->source_record($member), $candidates);
             $min = (float) Hrefl_Settings::get('ai_confidence', 0.6);
             if ($verdict['choice'] !== null && $verdict['confidence'] >= $min) {
-                return $this->join_group($member, (string) $candidates[$verdict['choice']]['group_id']);
+                return $this->join_group($member, (string) $candidates[$verdict['choice']]['group_id'], (float) $verdict['confidence']);
             }
             return false;
         }
 
         // No LLM: accept the top embedding candidate only if very confident.
         $top = $candidates[0];
-        if ((float) ($top['embedding_score'] ?? 0.0) >= (float) Hrefl_Settings::get('embedding_autojoin', 0.9)) {
-            return $this->join_group($member, (string) $top['group_id']);
+        $score = (float) ($top['embedding_score'] ?? 0.0);
+        if ($score >= (float) Hrefl_Settings::get('embedding_autojoin', 0.9)) {
+            return $this->join_group($member, (string) $top['group_id'], $score);
         }
         return false;
     }
@@ -88,20 +89,21 @@ final class Hrefl_Matcher {
      *
      * @param array<string,mixed> $member
      */
-    private function join_group(array $member, string $group_id): bool {
+    private function join_group(array $member, string $group_id, float $confidence): bool {
         if ($group_id === '' || $group_id === (string) $member['group_id']) {
             return false;
         }
         $this->registry->upsert_member([
-            'group_id' => $group_id,
-            'market'   => (string) $member['market'],
-            'language' => (string) ($member['lang'] ?? ''),
-            'hreflang' => (string) ($member['hreflang'] ?? ''),
-            'url'      => (string) $member['url'],
-            'title'    => $member['title'] ?? null,
-            'status'   => 'proposed',
-            'valid'    => (int) ($member['valid'] ?? 0),
-            'changed'  => (int) ($member['changed'] ?? 0),
+            'group_id'   => $group_id,
+            'market'     => (string) $member['market'],
+            'language'   => (string) ($member['lang'] ?? ''),
+            'hreflang'   => (string) ($member['hreflang'] ?? ''),
+            'url'        => (string) $member['url'],
+            'title'      => $member['title'] ?? null,
+            'status'     => 'proposed',
+            'valid'      => (int) ($member['valid'] ?? 0),
+            'changed'    => (int) ($member['changed'] ?? 0),
+            'confidence' => $confidence,
         ]);
         return true;
     }
@@ -126,17 +128,19 @@ final class Hrefl_Matcher {
                 $anchor = $peer;
             }
         }
-        // Join the anchor's group (stays 'proposed' for human review).
+        // Join the anchor's group (stays 'proposed' for human review). A slug
+        // match is deterministic -> confidence 1.0.
         $this->registry->upsert_member([
-            'group_id' => (string) $anchor['group_id'],
-            'market'   => (string) $member['market'],
-            'language' => (string) $member['lang'],
-            'hreflang' => (string) $member['hreflang'],
-            'url'      => (string) $member['url'],
-            'title'    => $member['title'] ?? null,
-            'status'   => 'proposed',
-            'valid'    => (int) $member['valid'],
-            'changed'  => (int) ($member['changed'] ?? 0),
+            'group_id'   => (string) $anchor['group_id'],
+            'market'     => (string) $member['market'],
+            'language'   => (string) $member['lang'],
+            'hreflang'   => (string) $member['hreflang'],
+            'url'        => (string) $member['url'],
+            'title'      => $member['title'] ?? null,
+            'status'     => 'proposed',
+            'valid'      => (int) $member['valid'],
+            'changed'    => (int) ($member['changed'] ?? 0),
+            'confidence' => 1.0,
         ]);
         return true;
     }

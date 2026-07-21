@@ -51,6 +51,11 @@ final class Hrefl_Registry {
             'valid'    => (int) ($m['valid'] ?? 0),
             'changed'  => (int) ($m['changed'] ?? 0),
         ];
+        // Only touch confidence when the caller sets it (a matcher), so a plain
+        // re-ingest never resets a scored member back to 0.
+        if (isset($m['confidence'])) {
+            $fields['confidence'] = (float) $m['confidence'];
+        }
         $existing = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$t} WHERE url_hash = %s", $urlHash));
         if ($existing) {
             $wpdb->update($t, $fields, ['id' => (int) $existing]);
@@ -249,10 +254,11 @@ final class Hrefl_Registry {
      *
      * @return array<int,array<string,mixed>>
      */
-    public function proposed_valid_members(int $limit = 200): array {
+    public function proposed_valid_members(int $limit = 200, float $min_confidence = 0.0): array {
         global $wpdb;
         return (array) $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$this->members()} WHERE status = 'proposed' AND valid = 1 ORDER BY id ASC LIMIT %d",
+            "SELECT * FROM {$this->members()} WHERE status = 'proposed' AND valid = 1 AND confidence >= %f ORDER BY id ASC LIMIT %d",
+            $min_confidence,
             $limit
         ), ARRAY_A);
     }

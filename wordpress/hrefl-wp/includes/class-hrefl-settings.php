@@ -58,6 +58,9 @@ final class Hrefl_Settings {
             // mappings (still only if the target validated and there is no
             // hreflang collision). Default OFF - keep a human in the loop.
             'auto_confirm'        => 0,
+            // Only auto-confirm matches at or above this confidence (slug matches
+            // are 1.0; lower-confidence AI matches still route to human review).
+            'auto_confirm_min_confidence' => 0.9,
         ];
         return array_merge($defaults, (array) get_option(self::OPTION, []));
     }

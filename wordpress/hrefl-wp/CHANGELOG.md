@@ -2,6 +2,17 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
+## 0.3.3 - 2026-07-22 - confidence-gated auto-confirm
+
+- **Auto-confirm now honors a confidence threshold**, matching the Drupal engine.
+  Each match stores its confidence (a new `confidence` column: deterministic slug
+  matches = 1.0, AI matches carry the adjudication/embedding score), and the
+  auto-confirm sweep only publishes proposed+valid members at or above
+  `auto_confirm_min_confidence` (default 0.9, configurable in the hub form). So a
+  weaker AI match becomes a proposal for human review instead of auto-publishing,
+  while deterministic matches still go live. The correctness guard (validity +
+  no hreflang collision) still applies on top.
+
 ## 0.3.2 - 2026-07-22 - resilient AI/embedding calls
 
 - **Retry with backoff on the AI and embedding requests.** A transport error or

@@ -25,4 +25,15 @@ final class AutoConfirmTest extends TestCase {
         $GLOBALS['hrefl_test_options']['hrefl_settings'] = ['auto_confirm' => 1];
         $this->assertTrue((bool) Hrefl_Settings::get('auto_confirm'));
     }
+
+    public function testMinConfidenceDefaultsToHigh(): void {
+        // Auto-confirm is confidence-gated: only high-confidence matches (slug
+        // matches are 1.0) qualify by default; weaker AI matches stay in review.
+        $this->assertSame(0.9, (float) Hrefl_Settings::get('auto_confirm_min_confidence'));
+    }
+
+    public function testMinConfidenceIsConfigurable(): void {
+        $GLOBALS['hrefl_test_options']['hrefl_settings'] = ['auto_confirm_min_confidence' => 0.75];
+        $this->assertSame(0.75, (float) Hrefl_Settings::get('auto_confirm_min_confidence'));
+    }
 }
