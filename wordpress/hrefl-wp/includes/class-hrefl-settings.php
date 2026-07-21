@@ -31,6 +31,8 @@ final class Hrefl_Settings {
             'lang_map'        => ['' => ''],
             'emit_head'       => 1,
             'sitemap_enabled' => 1,
+            // <priority> emitted for each sitemap URL (0.0-1.0).
+            'sitemap_priority' => 0.5,
             // Hub-only: market => absolute owned prefix.
             'markets'         => [],
             // HMAC secret fallback (prefer the HREFL_HUB_SECRET constant).

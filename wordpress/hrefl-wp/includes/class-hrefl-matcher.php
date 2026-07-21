@@ -23,6 +23,9 @@ final class Hrefl_Matcher {
             if ($this->match_one($member)) {
                 $matched++;
             }
+            // Stamp every processed member (matched or not) so the next run moves
+            // on to the backlog instead of re-checking the same rows.
+            $this->registry->stamp_matched((int) $member['id']);
         }
         if ($matched) {
             $this->registry->delete_empty_groups();
@@ -59,6 +62,7 @@ final class Hrefl_Matcher {
             'title'    => $member['title'] ?? null,
             'status'   => 'proposed',
             'valid'    => (int) $member['valid'],
+            'changed'  => (int) ($member['changed'] ?? 0),
         ]);
         return true;
     }

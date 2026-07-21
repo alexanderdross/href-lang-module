@@ -19,6 +19,10 @@ final class Hrefl_Plugin {
     public function boot(): void {
         load_plugin_textdomain('hrefl', false, dirname(plugin_basename(HREFL_FILE)) . '/languages');
 
+        // Keep the schema current on code updates that did not re-activate the
+        // plugin (dbDelta is idempotent and only adds what is missing).
+        add_action('admin_init', [$this, 'maybe_upgrade']);
+
         $store       = new Hrefl_Store();
         $registry    = new Hrefl_Registry();
         $emitter     = new Hrefl_Emitter($store);
@@ -49,6 +53,17 @@ final class Hrefl_Plugin {
     }
 
     /**
+     * Runs dbDelta when the stored schema version is behind the plugin version.
+     */
+    public function maybe_upgrade(): void {
+        if (get_option('hrefl_db_version') === HREFL_VERSION) {
+            return;
+        }
+        Hrefl_Activator::create_tables();
+        update_option('hrefl_db_version', HREFL_VERSION, false);
+    }
+
+    /**
      * Client cron: publish inventory to the hub, pull resolved alternates.
      */
     public function cron_sync(): void {
@@ -56,7 +71,8 @@ final class Hrefl_Plugin {
             return;
         }
         $hub = new Hrefl_Hub_Client();
-        $records = (new Hrefl_Collector())->collect();
+        // Cursor-based walk so the whole corpus syncs across runs.
+        $records = (new Hrefl_Collector())->collect_next();
         if ($records) {
             $hub->publish_inventory($records);
         }

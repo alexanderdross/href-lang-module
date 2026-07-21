@@ -23,8 +23,30 @@ if (!function_exists('wp_parse_url')) {
         return parse_url($url, $component);
     }
 }
+if (!function_exists('home_url')) {
+    function home_url(string $path = ''): string
+    {
+        return 'https://example.test' . $path;
+    }
+}
+if (!function_exists('trailingslashit')) {
+    function trailingslashit(string $s): string
+    {
+        return rtrim($s, '/') . '/';
+    }
+}
+// Settable option store for the pure-logic settings/markets tests.
+$GLOBALS['hrefl_test_options'] = [];
+if (!function_exists('get_option')) {
+    function get_option(string $key, $default = false)
+    {
+        return $GLOBALS['hrefl_test_options'][$key] ?? $default;
+    }
+}
 
 $plugin = dirname(__DIR__);
 require_once $plugin . '/includes/class-hrefl-validator.php';
 require_once $plugin . '/includes/class-hrefl-signer.php';
 require_once $plugin . '/includes/class-hrefl-registry.php';
+require_once $plugin . '/includes/class-hrefl-settings.php';
+require_once $plugin . '/includes/class-hrefl-markets.php';

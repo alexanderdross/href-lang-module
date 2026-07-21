@@ -31,7 +31,7 @@ final class Hrefl_Hub_Client {
         $resp = wp_remote_post($base . '/inventory', [
             'headers' => array_merge(
                 ['Content-Type' => 'application/json'],
-                Hrefl_Signer::headers('POST', $path, (string) $body)
+                Hrefl_Signer::headers('POST', $path, [], (string) $body)
             ),
             'body'    => $body,
             'timeout' => 30,
@@ -46,9 +46,11 @@ final class Hrefl_Hub_Client {
         if ($base === '') {
             return [];
         }
+        // The market travels in the signed X-Hrefl-Market header, not the query
+        // string, so it cannot be tampered with; the hub reads the header only.
         $path = Hrefl_Signer::route_path('alternates');
-        $resp = wp_remote_get($base . '/alternates?market=' . rawurlencode((string) Hrefl_Settings::get('market')), [
-            'headers' => Hrefl_Signer::headers('GET', $path, ''),
+        $resp = wp_remote_get($base . '/alternates', [
+            'headers' => Hrefl_Signer::headers('GET', $path, [], ''),
             'timeout' => 30,
         ]);
         if (is_wp_error($resp)) {

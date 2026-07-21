@@ -15,6 +15,11 @@ if (!defined('ABSPATH')) {
 
 final class Hrefl_Rest {
 
+    /**
+     * Maximum records accepted per ingest request (clients publish in batches).
+     */
+    private const MAX_RECORDS = 500;
+
     public function __construct(
         private Hrefl_Registry $registry,
         private Hrefl_Distributor $distributor
@@ -39,6 +44,15 @@ final class Hrefl_Rest {
             return new WP_REST_Response(['error' => 'invalid payload'], 400);
         }
         $market = (string) $payload['market'];
+        // The payload market must be the identity the HMAC check authenticated
+        // (the signature was made with that market's secret); otherwise a client
+        // could sign as itself yet assert records for another market.
+        if ($market !== (string) $request->get_header('x_hrefl_market')) {
+            return new WP_REST_Response(['error' => 'payload market does not match signed market'], 403);
+        }
+        if (count((array) $payload['records']) > self::MAX_RECORDS) {
+            return new WP_REST_Response(['error' => 'too many records', 'max' => self::MAX_RECORDS], 413);
+        }
         $accepted = 0;
         $rejected = 0;
         foreach ((array) $payload['records'] as $record) {
@@ -54,6 +68,7 @@ final class Hrefl_Rest {
                 'hreflang' => (string) ($record['hreflang'] ?? ''),
                 'url'      => $url,
                 'title'    => $record['title'] ?? null,
+                'changed'  => (int) ($record['changed'] ?? 0),
                 'status'   => 'proposed',
                 // Unvalidated on ingest; the validation cron checks the target
                 // (200 / canonical / index) and sets valid=1 before it can be
@@ -69,11 +84,9 @@ final class Hrefl_Rest {
     }
 
     public function alternates(WP_REST_Request $request): WP_REST_Response {
-        // The signed market header wins; the query param is a fallback.
+        // Market comes only from the signed header - never an unsigned query
+        // param - so it cannot be swapped to read another market's data.
         $market = (string) $request->get_header('x_hrefl_market');
-        if ($market === '') {
-            $market = (string) $request->get_param('market');
-        }
         if ($market === '') {
             return new WP_REST_Response(['error' => 'market required'], 400);
         }
