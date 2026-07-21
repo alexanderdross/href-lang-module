@@ -13,6 +13,9 @@ Closing the documented condensed-port gaps, landing in stages:
   the labelled alternates as JSON (public, reads the local store).
 - **HTTP Link header** - hreflang alternates are emitted as `Link:` headers on
   non-HTML responses (feeds, attachments), where a `<head>` tag is not an option.
+- **SSRF DNS pinning** - the validation fetch is pinned to the vetted public IP
+  (via the `http_api_curl` hook), closing the DNS-rebinding window; falls back to
+  the host allowlist when the curl transport is not used.
 
 ## 0.2.0 - 2026-07-21 - security & scale hardening
 

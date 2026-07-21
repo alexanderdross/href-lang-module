@@ -56,6 +56,11 @@ final class TargetValidator {
         'headers' => ['Accept' => 'text/html'],
         // No auth: validation fetches are anonymous by design.
         'auth' => NULL,
+        // Pin the connection to the IP we just vetted so the fetch cannot be
+        // re-pointed at an internal address between the check and the request
+        // (DNS rebinding / TOCTOU). Ignored by non-curl transports, which fall
+        // back to the host allowlist.
+        'curl' => $this->pinnedCurl($url),
       ]);
     }
     catch (GuzzleException $e) {
@@ -98,6 +103,32 @@ final class TargetValidator {
       }
     }
     return TRUE;
+  }
+
+  /**
+   * Curl options that pin the request to a freshly vetted public IP.
+   *
+   * Returns [CURLOPT_RESOLVE => ["host:443:ip", "host:80:ip"]] for the first
+   * public IP the host resolves to, or [] when there is nothing to pin (a
+   * literal-IP host, curl unavailable, or - defensively - no public IP, in
+   * which case isSafeUrl already refused the fetch).
+   *
+   * @return array<int,mixed>
+   */
+  private function pinnedCurl(string $url): array {
+    if (!\extension_loaded('curl')) {
+      return [];
+    }
+    $host = (string) parse_url($url, PHP_URL_HOST);
+    if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+      return [];
+    }
+    foreach ($this->resolveIps($host) as $ip) {
+      if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        return [CURLOPT_RESOLVE => [$host . ':443:' . $ip, $host . ':80:' . $ip]];
+      }
+    }
+    return [];
   }
 
   /**
