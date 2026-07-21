@@ -98,6 +98,28 @@ final class Hrefl_Admin {
                     <tr><th><?php esc_html_e('Markets (market|prefix)', 'hrefl'); ?></th>
                         <td><textarea name="markets" rows="5" class="large-text code"><?php echo esc_textarea($this->encode_markets($s['markets'])); ?></textarea>
                         <p class="description">One per line. A path or a whole domain, e.g. <code>de|https://host/de/</code> or <code>es|https://host.es/</code>.</p></td></tr>
+                    <tr><th colspan="2"><h2 style="margin:0"><?php esc_html_e('AI matching (optional)', 'hrefl'); ?></h2>
+                        <p class="description"><?php esc_html_e('All AI output is a proposal - a human still confirms every match. Metadata only (title/URL), never full page bodies.', 'hrefl'); ?></p></th></tr>
+                    <tr><th><?php esc_html_e('AI provider (Tier C)', 'hrefl'); ?></th><td>
+                        <select name="ai_provider">
+                            <?php foreach (['' => 'None', 'copilot' => 'Microsoft Copilot', 'anthropic' => 'Anthropic'] as $k => $label): ?>
+                                <option value="<?php echo esc_attr($k); ?>" <?php selected($s['ai_provider'], $k); ?>><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </select></td></tr>
+                    <tr><th><?php esc_html_e('AI endpoint', 'hrefl'); ?></th>
+                        <td><input type="url" name="ai_endpoint" value="<?php echo esc_attr($s['ai_endpoint']); ?>" class="regular-text"></td></tr>
+                    <tr><th><?php esc_html_e('AI model', 'hrefl'); ?></th>
+                        <td><input type="text" name="ai_model" value="<?php echo esc_attr($s['ai_model']); ?>" class="regular-text"></td></tr>
+                    <tr><th><?php esc_html_e('AI API key', 'hrefl'); ?></th>
+                        <td><input type="password" name="ai_key" value="<?php echo esc_attr($s['ai_key']); ?>" class="regular-text" autocomplete="off">
+                        <p class="description"><?php esc_html_e('Prefer HREFL_ANTHROPIC_KEY / HREFL_COPILOT_KEY in wp-config.php.', 'hrefl'); ?></p></td></tr>
+                    <tr><th><?php esc_html_e('Embedding endpoint (Tier B)', 'hrefl'); ?></th>
+                        <td><input type="url" name="embedding_endpoint" value="<?php echo esc_attr($s['embedding_endpoint']); ?>" class="regular-text" placeholder="self-hosted preferred"></td></tr>
+                    <tr><th><?php esc_html_e('Embedding model', 'hrefl'); ?></th>
+                        <td><input type="text" name="embedding_model" value="<?php echo esc_attr($s['embedding_model']); ?>" class="regular-text"></td></tr>
+                    <tr><th><?php esc_html_e('Embedding API key', 'hrefl'); ?></th>
+                        <td><input type="password" name="embedding_key" value="<?php echo esc_attr($s['embedding_key']); ?>" class="regular-text" autocomplete="off">
+                        <p class="description"><?php esc_html_e('Optional; or HREFL_EMBEDDING_KEY in wp-config.php.', 'hrefl'); ?></p></td></tr>
                     <?php endif; ?>
                 </table>
                 <?php submit_button(); ?>
@@ -117,6 +139,13 @@ final class Hrefl_Admin {
             'sitemap_enabled' => empty($post['sitemap_enabled']) ? 0 : 1,
             'lang_map'        => $this->decode_map((string) ($post['lang_map'] ?? '')),
             'markets'         => $this->decode_markets((string) ($post['markets'] ?? '')),
+            'ai_provider'       => in_array($post['ai_provider'] ?? '', ['', 'anthropic', 'copilot'], true) ? (string) $post['ai_provider'] : '',
+            'ai_endpoint'       => esc_url_raw($post['ai_endpoint'] ?? ''),
+            'ai_model'          => sanitize_text_field($post['ai_model'] ?? ''),
+            'ai_key'            => sanitize_text_field($post['ai_key'] ?? ''),
+            'embedding_endpoint' => esc_url_raw($post['embedding_endpoint'] ?? ''),
+            'embedding_model'    => sanitize_text_field($post['embedding_model'] ?? ''),
+            'embedding_key'      => sanitize_text_field($post['embedding_key'] ?? ''),
         ]);
         flush_rewrite_rules(false);
     }

@@ -79,8 +79,22 @@ final class Hrefl_Activator {
             KEY last_matched (last_matched)
         ) $charset;";
 
+        $emb = "CREATE TABLE {$p}hrefl_embedding (
+            url_hash char(64) NOT NULL,
+            url text NOT NULL,
+            market varchar(32) NOT NULL,
+            language varchar(12) NOT NULL,
+            content_hash char(64) NOT NULL,
+            dims int NOT NULL DEFAULT 0,
+            vector longtext NOT NULL,
+            updated bigint(20) NOT NULL DEFAULT 0,
+            PRIMARY KEY  (url_hash),
+            KEY market (market)
+        ) $charset;";
+
         dbDelta($alt);
         dbDelta($grp);
         dbDelta($mem);
+        dbDelta($emb);
     }
 }

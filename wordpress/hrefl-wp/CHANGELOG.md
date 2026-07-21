@@ -16,6 +16,18 @@ Closing the documented condensed-port gaps, landing in stages:
 - **SSRF DNS pinning** - the validation fetch is pinned to the vetted public IP
   (via the `http_api_curl` hook), closing the DNS-rebinding window; falls back to
   the host allowlist when the curl transport is not used.
+- **AI matching engine (Tier B + C)** - the full Drupal engine, ported:
+  - **Tier B embeddings** (`Hrefl_Embedding_Matcher` + `Hrefl_Vector_Store`):
+    embeds title+slug against a configurable endpoint (self-hosted preferred),
+    stores one vector per URL, and finds nearest pages in other markets by
+    cosine - the candidate set for Tier C.
+  - **Tier C adjudication** (`Hrefl_Ai_Matcher`): Microsoft Copilot or Anthropic
+    (selectable) chooses the true equivalent among the candidates or "none";
+    it never invents a URL. Metadata-only by default; keys come from
+    `HREFL_ANTHROPIC_KEY` / `HREFL_COPILOT_KEY` / `HREFL_EMBEDDING_KEY` (or the
+    stored option). All output is a proposal - a human still confirms.
+  - The matcher runs Tier A (slug) -> B -> C; cron warms embeddings first. New
+    `hrefl_embedding` table and admin settings for both tiers.
 
 ## 0.2.0 - 2026-07-21 - security & scale hardening
 
