@@ -134,6 +134,55 @@ final class Hrefl_Registry {
         ), ARRAY_A);
     }
 
+    private function glossary(): string {
+        global $wpdb;
+        return $wpdb->prefix . 'hrefl_glossary';
+    }
+
+    /**
+     * Record (or re-weight) a learned equivalence between two slug tokens.
+     * Upsert on the token pair, so learning is idempotent.
+     */
+    public function add_glossary_entry(string $source_lang, string $target_lang, string $source_token, string $target_token, float $weight = 1.0): void {
+        global $wpdb;
+        if ($source_token === '' || $target_token === '') {
+            return;
+        }
+        $wpdb->query($wpdb->prepare(
+            "INSERT INTO {$this->glossary()} (source_lang, target_lang, source_token, target_token, weight)
+             VALUES (%s, %s, %s, %s, %f)
+             ON DUPLICATE KEY UPDATE weight = VALUES(weight)",
+            $source_lang,
+            $target_lang,
+            $source_token,
+            $target_token,
+            $weight
+        ));
+    }
+
+    /**
+     * Slug tokens known to be equivalent to $slug in $lang, in either direction.
+     *
+     * @return string[]
+     */
+    public function glossary_equivalents(string $lang, string $slug): array {
+        global $wpdb;
+        if ($slug === '') {
+            return [];
+        }
+        $g = $this->glossary();
+        $forward = (array) $wpdb->get_col($wpdb->prepare(
+            "SELECT target_token FROM {$g} WHERE source_lang = %s AND source_token = %s",
+            $lang,
+            $slug
+        ));
+        $reverse = (array) $wpdb->get_col($wpdb->prepare(
+            "SELECT source_token FROM {$g} WHERE target_token = %s",
+            $slug
+        ));
+        return array_values(array_unique(array_merge($forward, $reverse)));
+    }
+
     public function members_by_slug(array $slugs, string $exclude_market): array {
         global $wpdb;
         $slugs = array_values(array_unique(array_filter($slugs, static fn($s) => $s !== '')));

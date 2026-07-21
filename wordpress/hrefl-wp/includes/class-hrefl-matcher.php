@@ -113,7 +113,10 @@ final class Hrefl_Matcher {
         if ($slug === '') {
             return false;
         }
-        $peers = $this->registry->members_by_slug([$slug], (string) $member['market']);
+        // Bridge across languages via the learned glossary (about-us <-> ueber-uns),
+        // grown from prior confirmations; falls back to the identical-slug case.
+        $slugs = array_merge([$slug], $this->registry->glossary_equivalents((string) ($member['lang'] ?? ''), $slug));
+        $peers = $this->registry->members_by_slug($slugs, (string) $member['market']);
         if (!$peers) {
             return false;
         }
