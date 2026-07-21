@@ -73,7 +73,8 @@ final class SignedRequestAccessCheckTest extends KernelTestBase {
    */
   private function signedRequest(string $body, string $secret, int $timestamp, string $market): Request {
     $request = Request::create('https://pro.boehringer-ingelheim.com' . self::PATH, 'POST', [], [], [], [], $body);
-    $canonical = implode("\n", ['POST', self::PATH, (string) $timestamp, hash('sha256', $body)]);
+    // Canonical v2: METHOD \n PATH \n QUERY \n TIMESTAMP \n sha256(body).
+    $canonical = implode("\n", ['POST', self::PATH, '', (string) $timestamp, hash('sha256', $body)]);
     $request->headers->set('X-Hrefl-Market', $market);
     $request->headers->set('X-Hrefl-Timestamp', (string) $timestamp);
     $request->headers->set('X-Hrefl-Signature', hash_hmac('sha256', $canonical, $secret));

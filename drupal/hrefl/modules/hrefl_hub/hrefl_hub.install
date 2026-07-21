@@ -109,16 +109,26 @@ function hrefl_hub_schema(): array {
         'default' => 0,
         'description' => 'Editor pin: automation must not override.',
       ],
+      'last_matched' => [
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'When the matching engine last processed this member.',
+      ],
     ],
     'primary key' => ['id'],
     'unique keys' => [
-      'url' => ['url'],
+      // Prefix-length key: a full-width unique key on a varchar(2048) utf8mb4
+      // column exceeds InnoDB's 3072-byte index limit and fails to install on
+      // MySQL/MariaDB. 191 chars covers realistic URLs; switch to a sha256
+      // url_hash column if same-prefix collisions ever matter.
+      'url' => [['url', 191]],
     ],
     'indexes' => [
       'group' => ['group_uuid'],
       'market_status' => ['market', 'status'],
       'hreflang' => ['hreflang'],
       'path_key' => ['path_key'],
+      'last_matched' => ['last_matched'],
     ],
   ];
 
@@ -188,7 +198,7 @@ function hrefl_hub_schema(): array {
 /**
  * Add the path_key column for URL-pattern matching and backfill it.
  */
-function hrefl_hub_update_9001(): void {
+function hrefl_hub_update_10001(): void {
   $schema = \Drupal::database()->schema();
   if (!$schema->fieldExists('hrefl_group_member', 'path_key')) {
     $schema->addField('hrefl_group_member', 'path_key', [
@@ -218,7 +228,7 @@ function hrefl_hub_update_9001(): void {
 /**
  * Add the title column (content signal for AI matching/translation).
  */
-function hrefl_hub_update_9002(): void {
+function hrefl_hub_update_10002(): void {
   $schema = \Drupal::database()->schema();
   if (!$schema->fieldExists('hrefl_group_member', 'title')) {
     $schema->addField('hrefl_group_member', 'title', [
@@ -233,7 +243,7 @@ function hrefl_hub_update_9002(): void {
 /**
  * Add the image column for the review preview thumbnail.
  */
-function hrefl_hub_update_9004(): void {
+function hrefl_hub_update_10004(): void {
   $schema = \Drupal::database()->schema();
   if (!$schema->fieldExists('hrefl_group_member', 'image')) {
     $schema->addField('hrefl_group_member', 'image', [
@@ -248,7 +258,7 @@ function hrefl_hub_update_9004(): void {
 /**
  * Add the Tier-B embedding store table.
  */
-function hrefl_hub_update_9003(): void {
+function hrefl_hub_update_10003(): void {
   $schema = \Drupal::database()->schema();
   if ($schema->tableExists('hrefl_embedding')) {
     return;
@@ -268,4 +278,18 @@ function hrefl_hub_update_9003(): void {
     'primary key' => ['url_hash'],
     'indexes' => ['market' => ['market']],
   ]);
+}
+
+/**
+ * Add the last_matched column used to page the cron matching pass fairly.
+ */
+function hrefl_hub_update_10005(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('hrefl_group_member', 'last_matched')) {
+    $schema->addField('hrefl_group_member', 'last_matched', [
+      'type' => 'int',
+      'not null' => FALSE,
+      'description' => 'When the matching engine last processed this member.',
+    ], ['indexes' => ['last_matched' => ['last_matched']]]);
+  }
 }

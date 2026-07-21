@@ -6,9 +6,9 @@ namespace Drupal\hrefl_client\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\hrefl_client\Service\HreflangEmitter;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Emits hreflang as an HTTP `Link` header — the third emission method.
@@ -39,17 +39,23 @@ final class LinkHeaderSubscriber implements EventSubscriberInterface {
     if (!$event->isMainRequest()) {
       return;
     }
+    $response = $event->getResponse();
+    // Only decorate successful responses; skip errors and redirects before
+    // paying for config/store lookups.
+    if (!$response->isOk()) {
+      return;
+    }
     if (!$this->configFactory->get('hrefl_client.settings')->get('emit_link_header')) {
       return;
     }
-    $response = $event->getResponse();
     // HTML pages already carry the <head> tags; only add the header elsewhere.
     $contentType = (string) $response->headers->get('Content-Type', '');
     if ($contentType === '' || str_contains($contentType, 'text/html')) {
       return;
     }
 
-    $url = $event->getRequest()->getUri();
+    // The store is keyed by canonical URL: no query string.
+    $url = explode('?', $event->getRequest()->getUri(), 2)[0];
     $parts = [];
     foreach ($this->emitter->alternates($url) as $alt) {
       $parts[] = sprintf('<%s>; rel="alternate"; hreflang="%s"', $alt['href'], $alt['hreflang']);

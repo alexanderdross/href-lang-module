@@ -11,7 +11,7 @@ site_base_url: 'https://pro.boehringer-ingelheim.com'
 # Emit head-tag hreflang here as well as via the sitemap. At large scale the
 # sitemap can be the primary carrier and this turned off per section.
 emit_head_tags: true
-# Serve the module's own multilingual sitemap at /hrefl/sitemap.xml. This is the
+# Serve the module's own multilingual sitemap at /hrefl-sitemap.xml. This is the
 # multilingual carrier (simple_sitemap is single-language and not used for this).
 sitemap_enabled: true
 # Default <priority> applied to sitemap URLs (0.0–1.0).

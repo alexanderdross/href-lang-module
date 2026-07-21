@@ -36,6 +36,11 @@ final class IngestController extends ControllerBase {
   }
 
   /**
+   * Maximum records accepted per request (the client publishes in batches).
+   */
+  private const MAX_RECORDS = 500;
+
+  /**
    * POST /hrefl-hub/api/v1/inventory.
    */
   public function ingest(Request $request): JsonResponse {
@@ -44,6 +49,15 @@ final class IngestController extends ControllerBase {
       return new JsonResponse(['error' => 'invalid payload'], 400);
     }
     $market = (string) $payload['market'];
+    // The payload market must be the identity the HMAC check authenticated
+    // (the signature was made with that market's secret); otherwise a client
+    // could sign as itself but assert records as another market.
+    if ($market !== (string) $request->headers->get('X-Hrefl-Market', '')) {
+      return new JsonResponse(['error' => 'payload market does not match signed market'], 403);
+    }
+    if (count((array) $payload['records']) > self::MAX_RECORDS) {
+      return new JsonResponse(['error' => 'too many records', 'max' => self::MAX_RECORDS], 413);
+    }
 
     $accepted = 0;
     $rejected = 0;

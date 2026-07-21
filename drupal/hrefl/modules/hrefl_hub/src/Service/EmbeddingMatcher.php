@@ -92,13 +92,18 @@ final class EmbeddingMatcher {
 
   /**
    * Embed a bounded batch of members (cron warm-up). Returns count embedded.
+   *
+   * Only members without a stored vector are selected, so successive cron
+   * runs walk the whole corpus instead of re-checking the same first rows.
+   * Content changes are re-embedded via ensureEmbedded() when a member is
+   * re-matched.
    */
   public function embedPass(int $limit = 200): int {
     if (!$this->activeProvider()) {
       return 0;
     }
     $embedded = 0;
-    foreach ($this->registry->allMembers($limit) as $member) {
+    foreach ($this->registry->membersMissingEmbedding($limit) as $member) {
       if ($this->ensureEmbedded($member)) {
         $embedded++;
       }

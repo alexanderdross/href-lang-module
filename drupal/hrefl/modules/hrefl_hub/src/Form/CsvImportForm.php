@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\hrefl_hub\Form;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\FileInterface;
 use Drupal\hrefl_hub\Service\CsvImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Upload an edited review CSV — the point-and-click counterpart to the API.
@@ -21,7 +22,7 @@ final class CsvImportForm extends FormBase {
 
   public function __construct(
     private readonly CsvImporter $importer,
-    private readonly RequestStack $requestStack,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -30,7 +31,7 @@ final class CsvImportForm extends FormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('hrefl_hub.csv_importer'),
-      $container->get('request_stack'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -48,10 +49,18 @@ final class CsvImportForm extends FormBase {
     $form['help'] = [
       '#markup' => '<p>' . $this->t('Upload a review CSV (the file you exported and edited). Set the <em>decision</em> column to <code>confirm</code> or <code>reject</code> per row; <code>leave</code> keeps a row unchanged. Confirmations run the same checks as the review queue.') . '</p>',
     ];
+    // Managed upload: goes through Drupal's upload pipeline (extension and
+    // size validators, sanitized filename, temporary managed file that cron
+    // garbage-collects).
     $form['csv'] = [
-      '#type' => 'file',
+      '#type' => 'managed_file',
       '#title' => $this->t('CSV file'),
       '#description' => $this->t('A .csv file exported from this hub.'),
+      '#required' => TRUE,
+      '#upload_location' => 'temporary://',
+      '#upload_validators' => [
+        'FileExtension' => ['extensions' => 'csv'],
+      ],
     ];
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
@@ -64,23 +73,15 @@ final class CsvImportForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state): void {
-    $file = $this->uploadedFile();
-    if ($file === NULL) {
-      $form_state->setErrorByName('csv', $this->t('Please choose a CSV file to upload.'));
-      return;
-    }
-    if (strtolower((string) $file->getClientOriginalExtension()) !== 'csv') {
-      $form_state->setErrorByName('csv', $this->t('The file must be a .csv file.'));
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $file = $this->uploadedFile();
-    $content = $file ? (string) file_get_contents($file->getRealPath()) : '';
+    $content = '';
+    $fids = (array) $form_state->getValue('csv');
+    $file = $fids ? $this->entityTypeManager->getStorage('file')->load(reset($fids)) : NULL;
+    if ($file instanceof FileInterface) {
+      $content = (string) file_get_contents($file->getFileUri());
+      // One-shot input: never promote it to a permanent file.
+      $file->delete();
+    }
     $result = $this->importer->import($content);
 
     $this->messenger()->addStatus($this->t('Applied @a decision(s); skipped @s row(s).', [
@@ -94,14 +95,6 @@ final class CsvImportForm extends FormBase {
       ]));
     }
     $form_state->setRedirect('hrefl_hub.review');
-  }
-
-  /**
-   * The uploaded CSV file from the request, or NULL.
-   */
-  private function uploadedFile() {
-    $files = $this->requestStack->getCurrentRequest()->files->get('files', []);
-    return is_array($files) ? ($files['csv'] ?? NULL) : NULL;
   }
 
 }

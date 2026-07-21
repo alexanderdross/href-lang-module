@@ -49,14 +49,20 @@ final class Registry {
     }
 
     if ($existing) {
-      // Never silently overwrite an editor-locked row via automation.
-      $locked = (int) $this->database->select('hrefl_group_member', 'm')
-        ->fields('m', ['locked'])
+      $current = $this->database->select('hrefl_group_member', 'm')
+        ->fields('m', ['locked', 'status'])
         ->condition('id', $existing)
         ->execute()
-        ->fetchField();
-      if ($locked && ($member['_via'] ?? 'manual') !== 'manual') {
+        ->fetchAssoc();
+      $via = $member['_via'] ?? 'manual';
+      // Never silently overwrite an editor-locked row via automation.
+      if (!empty($current['locked']) && $via !== 'manual') {
         return (int) $existing;
+      }
+      // An editor decision (confirmed/rejected) survives routine re-ingest:
+      // automation may refresh the row's data but not downgrade its status.
+      if ($via !== 'manual' && in_array($current['status'] ?? '', ['confirmed', 'rejected'], TRUE)) {
+        unset($fields['status']);
       }
       $this->database->update('hrefl_group_member')
         ->fields($fields)
@@ -261,13 +267,41 @@ final class Registry {
   }
 
   /**
-   * URLs that need (re)matching: proposed/held or newly changed.
+   * URLs that need (re)matching: proposed/held, never-matched first.
+   *
+   * Ordering by last_matched (NULLs first) makes the cron pass fair: every
+   * member gets a turn before any member is re-matched, so a large backlog
+   * cannot starve the tail or re-spend LLM calls on the same rows every run.
    */
   public function membersNeedingMatch(int $limit = 200): array {
     return $this->database->select('hrefl_group_member', 'm')
       ->fields('m')
       ->condition('status', ['proposed', 'held'], 'IN')
+      ->orderBy('last_matched', 'ASC')
+      ->orderBy('id', 'ASC')
       ->range(0, $limit)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Stamp when the matching engine processed a member.
+   */
+  public function markMatched(int $memberId): void {
+    $this->database->update('hrefl_group_member')
+      ->fields(['last_matched' => $this->time->getRequestTime()])
+      ->condition('id', $memberId)
+      ->execute();
+  }
+
+  /**
+   * Members that have no stored embedding vector yet (for the cron warm-up).
+   */
+  public function membersMissingEmbedding(int $limit = 200): array {
+    $query = $this->database->select('hrefl_group_member', 'm')->fields('m');
+    $query->leftJoin('hrefl_embedding', 'e', 'e.url = m.url');
+    $query->isNull('e.url_hash');
+    return $query->range(0, $limit)
       ->execute()
       ->fetchAll(\PDO::FETCH_ASSOC);
   }

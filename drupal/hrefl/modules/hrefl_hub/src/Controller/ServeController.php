@@ -27,16 +27,13 @@ final class ServeController extends ControllerBase {
   }
 
   /**
-   * GET /hrefl-hub/api/v1/alternates?market=de.
+   * GET /hrefl-hub/api/v1/alternates.
    *
-   * The market is taken from the signed request header when present (so a
-   * client can only pull its own market), falling back to the query parameter.
+   * The market is the signed request identity (X-Hrefl-Market, verified by
+   * the HMAC access check), so a client can only ever pull its own market.
    */
   public function alternates(Request $request): JsonResponse {
     $market = (string) $request->headers->get('X-Hrefl-Market', '');
-    if ($market === '') {
-      $market = (string) $request->query->get('market', '');
-    }
     if ($market === '') {
       return new JsonResponse(['error' => 'market required'], 400);
     }

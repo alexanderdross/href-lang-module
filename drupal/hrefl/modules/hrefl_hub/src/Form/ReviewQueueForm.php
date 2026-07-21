@@ -178,12 +178,19 @@ final class ReviewQueueForm extends FormBase {
     if ($translation !== '') {
       $build['translation'] = ['#markup' => '<div><em>' . Html::escape($translation) . '</em></div>'];
     }
-    $build['link'] = [
-      '#type' => 'link',
-      '#title' => $member['url'],
-      '#url' => Url::fromUri($member['url']),
-      '#attributes' => ['class' => ['hrefl-review-url']],
-    ];
+    // A malformed stored URL must degrade to plain text, not take down the
+    // whole queue with an unhandled InvalidArgumentException.
+    try {
+      $build['link'] = [
+        '#type' => 'link',
+        '#title' => $member['url'],
+        '#url' => Url::fromUri($member['url']),
+        '#attributes' => ['class' => ['hrefl-review-url']],
+      ];
+    }
+    catch (\InvalidArgumentException $e) {
+      $build['link'] = ['#plain_text' => (string) $member['url']];
+    }
     return $build;
   }
 

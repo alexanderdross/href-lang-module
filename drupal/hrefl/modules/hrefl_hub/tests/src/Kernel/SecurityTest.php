@@ -52,6 +52,8 @@ final class SecurityTest extends KernelTestBase {
       ],
     ]);
     $request = Request::create('/hrefl-hub/api/v1/inventory', 'POST', [], [], [], [], $payload);
+    // In production this header is verified by the HMAC access check.
+    $request->headers->set('X-Hrefl-Market', 'de');
 
     $response = IngestController::create($this->container)->ingest($request);
     $body = json_decode((string) $response->getContent(), TRUE);
@@ -61,6 +63,27 @@ final class SecurityTest extends KernelTestBase {
 
     $registry = $this->container->get('hrefl_hub.registry');
     $this->assertNotNull($registry->memberByUrl('https://pro.boehringer-ingelheim.com/de/ueber-uns'));
+    $this->assertNull($registry->memberByUrl('https://pro.boehringer-ingelheim.com/us/about-us'));
+  }
+
+  /**
+   * The payload market must match the HMAC-authenticated market header.
+   */
+  public function testIngestRejectsMarketMismatch(): void {
+    $payload = json_encode([
+      'market' => 'us',
+      'records' => [
+        ['url' => 'https://pro.boehringer-ingelheim.com/us/about-us', 'language' => 'en', 'hreflang' => 'en-US'],
+      ],
+    ]);
+    $request = Request::create('/hrefl-hub/api/v1/inventory', 'POST', [], [], [], [], $payload);
+    // Signed as DE but asserting records as US: must be refused.
+    $request->headers->set('X-Hrefl-Market', 'de');
+
+    $response = IngestController::create($this->container)->ingest($request);
+
+    $this->assertSame(403, $response->getStatusCode());
+    $registry = $this->container->get('hrefl_hub.registry');
     $this->assertNull($registry->memberByUrl('https://pro.boehringer-ingelheim.com/us/about-us'));
   }
 

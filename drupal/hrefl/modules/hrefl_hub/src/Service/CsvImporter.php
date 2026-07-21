@@ -27,7 +27,18 @@ final class CsvImporter {
    *   ['applied' => int, 'skipped' => int, 'blocked' => array<string,string[]>].
    */
   public function import(string $csv): array {
-    $rows = array_map('str_getcsv', array_filter(explode("\n", $csv)));
+    // Parse with fgetcsv() so RFC 4180 quoted fields (titles containing
+    // newlines or commas, as fputcsv writes on export) round-trip correctly.
+    $stream = fopen('php://temp', 'r+');
+    fwrite($stream, $csv);
+    rewind($stream);
+    $rows = [];
+    while (($row = fgetcsv($stream, 0, ',', '"', '\\')) !== FALSE) {
+      if ($row !== [NULL]) {
+        $rows[] = $row;
+      }
+    }
+    fclose($stream);
     if (!$rows) {
       return ['applied' => 0, 'skipped' => 0, 'blocked' => []];
     }
