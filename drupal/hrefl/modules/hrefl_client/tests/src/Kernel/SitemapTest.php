@@ -93,8 +93,8 @@ final class SitemapTest extends KernelTestBase {
     $this->assertNotFalse($index);
     $this->assertSame('sitemapindex', $index->getName());
     $this->assertCount(2, $index->sitemap);
-    $this->assertStringContainsString('/hrefl/sitemap.0.xml', (string) $index->sitemap[0]->loc);
-    $this->assertStringContainsString('/hrefl/sitemap.1.xml', (string) $index->sitemap[1]->loc);
+    $this->assertStringContainsString('/hrefl-sitemap.0.xml', (string) $index->sitemap[0]->loc);
+    $this->assertStringContainsString('/hrefl-sitemap.1.xml', (string) $index->sitemap[1]->loc);
 
     // Chunks page the URLs: 2 on page 0, the remaining 1 on page 1.
     $chunk0 = simplexml_load_string($generator->renderChunk(0));

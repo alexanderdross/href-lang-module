@@ -26,6 +26,10 @@ final class HubClient {
 
   /**
    * Publish a batch of inventory records to the hub.
+   *
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   *   When the hub is unreachable or rejects the request, so queue-driven
+   *   callers keep the item for retry instead of silently dropping it.
    */
   public function publishInventory(array $records): void {
     $config = $this->configFactory->get('hrefl_client.settings');
@@ -36,7 +40,7 @@ final class HubClient {
       'market' => $config->get('market'),
       'published_at' => gmdate('c'),
       'records' => $records,
-    ]);
+    ], JSON_THROW_ON_ERROR);
     try {
       $this->httpClient->request('POST', $url, [
         'body' => $body,
@@ -46,6 +50,7 @@ final class HubClient {
     }
     catch (GuzzleException $e) {
       $this->logger->error('Inventory publish failed: @m', ['@m' => $e->getMessage()]);
+      throw $e;
     }
   }
 
@@ -59,11 +64,14 @@ final class HubClient {
     $config = $this->configFactory->get('hrefl_client.settings');
     $base = rtrim((string) $config->get('hub_base_url'), '/');
     $url = $base . '/alternates';
+    $query = ['market' => (string) $config->get('market')];
     try {
+      // Send the canonical (key-sorted) encoding so the bytes on the wire are
+      // exactly what the signature covers.
       $response = $this->httpClient->request('GET', $url, [
-        'query' => ['market' => $config->get('market')],
-        // GET has no body; the signature covers method + path + timestamp.
-        'headers' => $this->signer->headers('GET', $this->pathOf($url), ''),
+        'query' => RequestSigner::canonicalQuery($query),
+        // GET has no body; the signature covers method + path + query + time.
+        'headers' => $this->signer->headers('GET', $this->pathOf($url), '', $query),
         'timeout' => 30,
       ]);
       $data = json_decode((string) $response->getBody(), TRUE);

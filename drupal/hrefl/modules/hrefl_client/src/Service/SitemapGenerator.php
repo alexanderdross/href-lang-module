@@ -111,7 +111,7 @@ final class SitemapGenerator {
     $writer->writeAttribute('xmlns', self::SITEMAP_NS);
     for ($i = 0; $i < $pages; $i++) {
       $writer->startElement('sitemap');
-      $writer->writeElement('loc', $base . '/hrefl/sitemap.' . $i . '.xml');
+      $writer->writeElement('loc', $base . '/hrefl-sitemap.' . $i . '.xml');
       $writer->endElement();
     }
     $writer->endElement();

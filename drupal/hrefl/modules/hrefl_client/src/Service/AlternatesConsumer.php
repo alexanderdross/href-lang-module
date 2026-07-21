@@ -67,6 +67,12 @@ final class AlternatesConsumer {
         'lastmod' => $page['lastmod'] ?? NULL,
       ];
     }
+    // Never swap the store for an empty set: a malformed or hostile payload
+    // whose pages all fail validation must not wipe the last known-good
+    // alternates (the outage guarantee this store exists for).
+    if (!$prepared) {
+      return 0;
+    }
     $this->store->replaceAll($prepared);
     return count($prepared);
   }

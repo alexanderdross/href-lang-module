@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\hrefl_client\Controller;
 
+use Drupal\Core\Cache\CacheableJsonResponse;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\hrefl_client\Service\HreflangEmitter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -29,15 +31,25 @@ final class SelectorController extends ControllerBase {
   }
 
   /**
-   * Return the current page's alternates as JSON.
+   * Return a page's alternates as JSON. Requires an explicit ?url=.
+   *
+   * No Referer fallback: a header-derived response must never enter a shared
+   * cache keyed only by the request URL.
    */
   public function feed(Request $request): JsonResponse {
-    $url = (string) $request->query->get('url', $request->headers->get('referer', ''));
-    $alternates = $url ? $this->emitter->alternates($url) : [];
-    $response = new JsonResponse([
+    $url = (string) $request->query->get('url', '');
+    if ($url === '') {
+      return new JsonResponse(['error' => 'missing url parameter'], 400);
+    }
+    $response = new CacheableJsonResponse([
       'url' => $url,
-      'alternates' => $alternates,
+      'alternates' => $this->emitter->alternates($url),
     ]);
+    $meta = (new CacheableMetadata())
+      ->addCacheContexts(['url.query_args:url'])
+      ->addCacheTags([$this->emitter->cacheTagForUrl($url) ?? 'hrefl_alternates'])
+      ->setCacheMaxAge(300);
+    $response->addCacheableDependency($meta);
     // Safe to cache at the edge: this is per-URL, not per-user.
     $response->setPublic();
     $response->setMaxAge(300);

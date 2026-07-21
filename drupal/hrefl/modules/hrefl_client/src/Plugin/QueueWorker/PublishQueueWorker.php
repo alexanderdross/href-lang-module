@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\hrefl_client\Plugin\QueueWorker;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\QueueWorkerBase;
@@ -28,6 +30,7 @@ final class PublishQueueWorker extends QueueWorkerBase implements ContainerFacto
     mixed $plugin_definition,
     private readonly InventoryCollector $collector,
     private readonly HubClient $hubClient,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -42,6 +45,7 @@ final class PublishQueueWorker extends QueueWorkerBase implements ContainerFacto
       $plugin_definition,
       $container->get('hrefl_client.inventory_collector'),
       $container->get('hrefl_client.hub_client'),
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -49,14 +53,38 @@ final class PublishQueueWorker extends QueueWorkerBase implements ContainerFacto
    * {@inheritdoc}
    *
    * @param mixed $data
-   *   Queue item: ['url' => string].
+   *   Queue item: ['url', 'entity_type', 'entity_id', 'deleted' => bool].
+   *
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   *   Propagated from the publish so the queue retries the item.
    */
   public function processItem($data): void {
-    // A full build re-collects just this URL's record; here we trigger a fresh
-    // inventory publish so the hub re-matches the changed page promptly.
-    $records = $this->collector->collect(50);
-    if ($records) {
-      $this->hubClient->publishInventory($records);
+    $url = (string) ($data['url'] ?? '');
+    if ($url === '') {
+      return;
+    }
+
+    // A deleted (or now unloadable) entity is retired at the hub by publishing
+    // its URL as non-indexable; the hub stops serving it as an alternate.
+    $entity = NULL;
+    if (empty($data['deleted']) && !empty($data['entity_type']) && !empty($data['entity_id'])) {
+      $entity = $this->entityTypeManager
+        ->getStorage((string) $data['entity_type'])
+        ->load($data['entity_id']);
+    }
+    if ($entity instanceof ContentEntityInterface) {
+      $record = $this->collector->recordFor($entity);
+      // Unpublished content is retired the same way as deleted content.
+      if ($record !== NULL && method_exists($entity, 'isPublished') && !$entity->isPublished()) {
+        $record['indexable'] = 0;
+      }
+    }
+    else {
+      $record = ['url' => $url, 'language' => '', 'hreflang' => '', 'indexable' => 0];
+    }
+
+    if ($record !== NULL) {
+      $this->hubClient->publishInventory([$record]);
     }
   }
 

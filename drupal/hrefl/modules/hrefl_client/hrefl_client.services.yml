@@ -23,6 +23,7 @@ services:
       - '@config.factory'
       - '@language_manager'
       - '@file_url_generator'
+      - '@state'
 
   # Signs outbound hub requests with this backend's shared HMAC secret.
   hrefl_client.request_signer:

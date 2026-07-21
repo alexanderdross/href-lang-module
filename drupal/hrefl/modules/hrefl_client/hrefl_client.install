@@ -58,7 +58,7 @@ function hrefl_client_schema(): array {
 /**
  * Add the lastmod column used by the multilingual sitemap.
  */
-function hrefl_client_update_9001(): void {
+function hrefl_client_update_10001(): void {
   $schema = \Drupal::database()->schema();
   if (!$schema->fieldExists('hrefl_client_alternates', 'lastmod')) {
     $schema->addField('hrefl_client_alternates', 'lastmod', [

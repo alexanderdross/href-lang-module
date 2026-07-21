@@ -55,7 +55,10 @@ final class CountryLanguageSelectorBlock extends BlockBase implements ContainerF
    */
   public function build(): array {
     $request = $this->requestStack->getCurrentRequest();
-    $currentUrl = $request ? $request->getUri() : '';
+    // Alternates are keyed by the canonical URL; strip any query string so
+    // /page?foo=1 resolves the same entry as /page (matching the url.path
+    // cache context below).
+    $currentUrl = $request ? explode('?', $request->getUri(), 2)[0] : '';
     $items = [];
     foreach ($this->emitter->alternates($currentUrl) as $alt) {
       if (($alt['hreflang'] ?? '') === 'x-default' || empty($alt['href'])) {
@@ -73,19 +76,25 @@ final class CountryLanguageSelectorBlock extends BlockBase implements ContainerF
       ];
     }
 
-    if (!$items) {
-      return [];
-    }
-
-    return [
-      '#theme' => 'item_list',
-      '#items' => $items,
-      '#attributes' => ['class' => ['hrefl-selector'], 'aria-label' => 'Country and language'],
+    // The empty case carries the same cacheability: without it, an empty
+    // render would be cached with no way to invalidate once alternates arrive.
+    $build = [
       '#cache' => [
         'contexts' => ['url.path'],
-        'tags' => array_filter([$this->emitter->cacheTagForUrl($currentUrl)]),
+        'tags' => [$this->emitter->cacheTagForUrl($currentUrl) ?? 'hrefl_alternates'],
       ],
     ];
+    if ($items) {
+      $build += [
+        '#theme' => 'item_list',
+        '#items' => $items,
+        '#attributes' => [
+          'class' => ['hrefl-selector'],
+          'aria-label' => $this->t('Country and language'),
+        ],
+      ];
+    }
+    return $build;
   }
 
 }

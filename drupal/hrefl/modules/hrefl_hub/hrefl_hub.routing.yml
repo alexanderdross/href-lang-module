@@ -29,6 +29,9 @@ hrefl_hub.api.csv_export:
   requirements:
     _permission: 'hrefl hub review mappings'
 
+# State-changing POST behind a session cookie: requires the CSRF header token
+# (X-CSRF-Token from /session/token) so a cross-site form post cannot apply
+# review decisions with a logged-in editor's session.
 hrefl_hub.api.csv_import:
   path: '/hrefl-hub/api/v1/import.csv'
   defaults:
@@ -36,6 +39,7 @@ hrefl_hub.api.csv_import:
   methods: [POST]
   requirements:
     _permission: 'hrefl hub review mappings'
+    _csrf_request_header_token: 'TRUE'
   options:
     no_cache: 'TRUE'
 

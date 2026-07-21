@@ -78,17 +78,29 @@ final class MarketRegistry {
   }
 
   /**
-   * Resolve a market's shared HMAC secret (key module, then env fallback).
+   * Resolve a market's shared HMAC secret.
    *
-   * Returns '' when no secret is configured — callers must fail closed.
+   * Returns '' when no secret is configured — callers must fail closed:
+   * - Unknown (unconfigured) markets never get a secret.
+   * - A configured key_name that fails to resolve is an error, not a
+   *   fall-through: no env fallback, so a broken key config cannot silently
+   *   downgrade every market to one shared secret.
+   * - The HREFL_HUB_SECRET env fallback applies only to configured markets
+   *   with no key_name (local development).
    */
   public function secretFor(string $market): string {
+    if (!array_key_exists($market, $this->markets())) {
+      return '';
+    }
     $keyName = $this->keyNameFor($market);
-    if ($keyName !== '' && is_object($this->keyRepository) && method_exists($this->keyRepository, 'getKey')) {
-      $key = $this->keyRepository->getKey($keyName);
-      if (is_object($key) && method_exists($key, 'getKeyValue')) {
-        return (string) $key->getKeyValue();
+    if ($keyName !== '') {
+      if (is_object($this->keyRepository) && method_exists($this->keyRepository, 'getKey')) {
+        $key = $this->keyRepository->getKey($keyName);
+        if (is_object($key) && method_exists($key, 'getKeyValue')) {
+          return (string) $key->getKeyValue();
+        }
       }
+      return '';
     }
     $env = getenv('HREFL_HUB_SECRET');
     return is_string($env) ? $env : '';

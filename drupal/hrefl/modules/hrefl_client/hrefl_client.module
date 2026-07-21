@@ -33,11 +33,11 @@ function hrefl_client_page_attachments(array &$attachments): void {
   foreach ($emitter->headElements($current) as $key => $element) {
     $attachments['#attached']['html_head'][] = [$element, $key];
   }
-  // Invalidate this page's hreflang when its group mapping changes.
+  // Invalidate this page's hreflang when its group mapping changes. Pages that
+  // do not have a group yet get the store-wide tag instead, so they pick up
+  // their alternates on the first pull that includes them.
   $groupTag = $emitter->cacheTagForUrl($current);
-  if ($groupTag) {
-    $attachments['#cache']['tags'][] = $groupTag;
-  }
+  $attachments['#cache']['tags'][] = $groupTag ?: 'hrefl_alternates';
 }
 
 /**
@@ -55,7 +55,9 @@ function hrefl_client_cron(): void {
   $consumer = \Drupal::service('hrefl_client.alternates_consumer');
 
   try {
-    $records = $collector->collect(200);
+    // Cursor-based walk: each run publishes the next slice of the corpus, so
+    // sites of any size are fully covered across successive cron runs.
+    $records = $collector->collectNext(200);
     if ($records) {
       $hub->publishInventory($records);
     }
@@ -84,16 +86,17 @@ function hrefl_client_entity_update(EntityInterface $entity): void {
  * Implements hook_entity_delete().
  */
 function hrefl_client_entity_delete(EntityInterface $entity): void {
-  _hrefl_client_enqueue_change($entity);
+  _hrefl_client_enqueue_change($entity, TRUE);
 }
 
 /**
- * Queue a changed content entity's URL for the next inventory publish.
+ * Queue a changed content entity for the next inventory publish.
  *
  * Event-driven matching: publishing/updating/retiring a page re-syncs it in
- * near real time, rather than waiting for a full crawl.
+ * near real time, rather than waiting for a full crawl. Deletions publish the
+ * URL as non-indexable so the hub retires it.
  */
-function _hrefl_client_enqueue_change(EntityInterface $entity): void {
+function _hrefl_client_enqueue_change(EntityInterface $entity, bool $deleted = FALSE): void {
   if (!($entity instanceof ContentEntityInterface) || !$entity->hasLinkTemplate('canonical')) {
     return;
   }
@@ -103,5 +106,10 @@ function _hrefl_client_enqueue_change(EntityInterface $entity): void {
   catch (\Exception $e) {
     return;
   }
-  \Drupal::queue('hrefl_client_publish')->createItem(['url' => $url]);
+  \Drupal::queue('hrefl_client_publish')->createItem([
+    'url' => $url,
+    'entity_type' => $entity->getEntityTypeId(),
+    'entity_id' => $entity->id(),
+    'deleted' => $deleted,
+  ]);
 }

@@ -12,8 +12,9 @@ namespace Drupal\hrefl_client\Service;
  *
  * - Absolute, fully-qualified http(s) URLs only (never relative or
  *   protocol-relative).
- * - Valid codes: ISO 639-1 language + optional ISO 3166-1 alpha-2 region,
- *   normalized to `lower-UPPER` (e.g. `en-US`, `fr-CA`), plus `x-default`.
+ * - Valid codes: ISO 639 language, optional ISO 15924 script (`zh-Hans`),
+ *   optional ISO 3166-1 alpha-2 or UN M49 numeric region (`en-US`, `es-419`),
+ *   normalized to `lower-Title-UPPER` casing, plus `x-default`.
  * - Each hreflang code appears at most once (no duplicate/colliding codes).
  * - At most one `x-default` per set.
  *
@@ -69,7 +70,7 @@ final class HreflangValidator {
   }
 
   /**
-   * Normalize a language/region code to `lower-UPPER` (or `x-default`).
+   * Normalize a code to BCP 47 casing: lang lower, Script Title, REGION upper.
    */
   public function normalizeCode(string $code): string {
     $code = str_replace('_', '-', trim($code));
@@ -80,11 +81,22 @@ final class HreflangValidator {
       return self::X_DEFAULT;
     }
     $parts = explode('-', $code);
-    $lang = strtolower($parts[0]);
-    if (isset($parts[1]) && $parts[1] !== '') {
-      return $lang . '-' . strtoupper($parts[1]);
+    $normalized = [strtolower(array_shift($parts))];
+    foreach ($parts as $part) {
+      if (preg_match('/^[A-Za-z]{4}$/', $part)) {
+        // Script subtag (Hans, Latn): title case.
+        $normalized[] = ucfirst(strtolower($part));
+      }
+      elseif (preg_match('/^[A-Za-z]{2}$/', $part)) {
+        // Alpha-2 region: upper case.
+        $normalized[] = strtoupper($part);
+      }
+      else {
+        // Numeric region (419) or anything unknown; isValidCode() decides.
+        $normalized[] = $part;
+      }
     }
-    return $lang;
+    return implode('-', $normalized);
   }
 
   /**
@@ -94,8 +106,10 @@ final class HreflangValidator {
     if ($code === self::X_DEFAULT) {
       return TRUE;
     }
-    // ISO 639-1 (2 letters) or 639-2 (3 letters), optional ISO 3166-1 region.
-    return (bool) preg_match('/^[a-z]{2,3}(-[A-Z]{2})?$/', $code);
+    // ISO 639-1/2 language, optional ISO 15924 script, optional ISO 3166-1
+    // alpha-2 or UN M49 numeric region (e.g. en, en-US, zh-Hans, zh-Hant-TW,
+    // es-419).
+    return (bool) preg_match('/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|\d{3}))?$/', $code);
   }
 
   /**

@@ -86,7 +86,7 @@ Work in progress, tracking `docs/ROADMAP.md`:
   `Anthropic`, both fully supported and selectable), plus title/slug translation
   (`TranslationProposer`). Confidence tiers drive auto-confirm / review / hold.
 - **Phase 3 (sitemap + hardening)** - in place. The module's **own multilingual
-  sitemap** (`/hrefl/sitemap.xml`: `xhtml:link` alternates + `lastmod` +
+  sitemap** (`/hrefl-sitemap.xml`: `xhtml:link` alternates + `lastmod` +
   `priority`, chunked into an index beyond 50k URLs), HTTP `Link` header for
   non-HTML, the country/language selector, and the Monitor dashboard.
 

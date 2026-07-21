@@ -8,6 +8,8 @@
 
 declare(strict_types=1);
 
+use Drupal\hrefl_hub\Service\Registry;
+
 /**
  * Implements hook_cron().
  *
@@ -30,12 +32,18 @@ function hrefl_hub_cron(): void {
 
 /**
  * Tier-A matching pass: coalesce same-content pages into proposed groups.
+ *
+ * @param \Drupal\hrefl_hub\Service\Registry $registry
+ *   The translation-group registry.
  */
-function _hrefl_hub_match_pass($registry): void {
+function _hrefl_hub_match_pass(Registry $registry): void {
   /** @var \Drupal\hrefl_hub\Service\MappingEngine $engine */
   $engine = \Drupal::service('hrefl_hub.mapping_engine');
   $matched = 0;
   foreach ($registry->membersNeedingMatch(200) as $member) {
+    // Stamp first so a member that errors out mid-match still yields its turn
+    // to the rest of the backlog on the next run.
+    $registry->markMatched((int) $member['id']);
     // Never let automation touch an editor-pinned member.
     if ((int) $member['locked'] === 1) {
       continue;
@@ -60,8 +68,11 @@ function _hrefl_hub_match_pass($registry): void {
 
 /**
  * Enqueue members needing a target (re)validation.
+ *
+ * @param \Drupal\hrefl_hub\Service\Registry $registry
+ *   The translation-group registry.
  */
-function _hrefl_hub_enqueue_validation($registry): void {
+function _hrefl_hub_enqueue_validation(Registry $registry): void {
   // Re-check anything older than a day, and everything never checked.
   $staleBefore = \Drupal::time()->getRequestTime() - 86400;
   $members = $registry->membersNeedingValidation(200, $staleBefore);

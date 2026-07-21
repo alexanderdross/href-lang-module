@@ -35,8 +35,8 @@ runnable on demand (`drush cron`).
 |---|---|----------|-------|----------|
 | 2.1 | P1 | Auto URL-pattern proposal | Publish same-slug pages in 2 markets; `drush cron` | They appear grouped as a single `proposed` mapping (matched_by = glossary) |
 | 2.2 | P2 | Glossary learns | Confirm a cross-language pair (e.g. ueber-uns↔about-us); publish another such page; cron | The new page is matched automatically next round |
-| 2.3 | P1 | Multilingual sitemap | Open `https://<site>/hrefl/sitemap.xml` | Valid `urlset` with `xhtml:link` alternates + `lastmod` + `priority` |
-| 2.4 | P2 | Sitemap index at scale | Lower `sitemap_chunk_size` to 2 (test) with ≥3 URLs | Entry point returns a `sitemapindex`; `…/hrefl/sitemap.0.xml` etc. return chunks |
+| 2.3 | P1 | Multilingual sitemap | Open `https://<site>/hrefl-sitemap.xml` | Valid `urlset` with `xhtml:link` alternates + `lastmod` + `priority` |
+| 2.4 | P2 | Sitemap index at scale | Lower `sitemap_chunk_size` to 2 (test) with ≥3 URLs | Entry point returns a `sitemapindex`; `…/hrefl-sitemap.0.xml` etc. return chunks |
 | 2.5 | P3 | AI translation help | Configure a provider; `drush hrefl-hub:translate-match` | New proposals carry a suggested title/slug shown in the queue |
 
 ## Phase 3 — Operate

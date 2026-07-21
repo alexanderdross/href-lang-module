@@ -98,10 +98,13 @@ final class VectorStore {
 
   /**
    * Cosine similarity of two equal-length vectors (0 if either is degenerate).
+   *
+   * Mismatched dimensions (e.g. vectors from different embedding models) are
+   * not comparable and score 0 rather than a truncated, garbage similarity.
    */
   public static function cosine(array $a, array $b): float {
-    $n = min(count($a), count($b));
-    if ($n === 0) {
+    $n = count($a);
+    if ($n === 0 || $n !== count($b)) {
       return 0.0;
     }
     $dot = 0.0;

@@ -181,7 +181,7 @@ Search and metadata → Hreflang Client settings** (`/admin/config/search/hrefl`
 - **Emit hreflang head tags** — leave **on**. Adds the hreflang links into each
   page.
 - **Serve the multilingual sitemap** — leave **on**. Publishes the sitemap at
-  `https://<this site>/hrefl/sitemap.xml`.
+  `https://<this site>/hrefl-sitemap.xml`.
 - **Default sitemap priority** — leave at `0.5` unless SEO tells you otherwise.
 - **Emit hreflang HTTP Link header on non‑HTML responses** — turn **on** only if
   you have PDFs (or similar) that also need hreflang.
@@ -298,7 +298,7 @@ Common questions:
 | Market shows **⚠** on the Markets screen | Shared secret not found | Set `HREFL_HUB_SECRET` (same value on hub + client) or the Key‑module key |
 | A link is always **skipped** on confirm | Target page is not reachable/indexable, or code clash | Fix/publish the target page; check the language codes |
 | Links don’t show on the site | Head tags off, or nothing confirmed yet | Turn on “Emit hreflang head tags”; confirm links in the queue |
-| Sitemap 404 at `/hrefl/sitemap.xml` | Sitemap disabled | Turn on “Serve the multilingual sitemap” in Client settings |
+| Sitemap 404 at `/hrefl-sitemap.xml` | Sitemap disabled | Turn on “Serve the multilingual sitemap” in Client settings |
 
 ---
 
@@ -335,7 +335,7 @@ Common questions:
 
 **Public URLs (per site)**
 
-- Sitemap: `https://<site>/hrefl/sitemap.xml`
+- Sitemap: `https://<site>/hrefl-sitemap.xml`
 - Selector data (JSON): `https://<site>/hrefl/selector`
 
 **Environment variables (🛠️ developer)**

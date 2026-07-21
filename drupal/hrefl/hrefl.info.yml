@@ -2,6 +2,8 @@ name: 'Hreflang Cross-Backend'
 type: module
 description: 'Cross-backend hreflang for a family of independent, path-prefixed Drupal backends. Umbrella package for the client and hub submodules.'
 package: 'SEO'
+# Codeless umbrella: only the submodules are meant to be enabled.
+hidden: true
 core_version_requirement: '^10.3 || ^11'
 # This umbrella has no code of its own. Enable the submodules you need:
 #   - hrefl_client: install on every backend (collector + emitters + selector).

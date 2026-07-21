@@ -15,12 +15,18 @@ use Symfony\Component\HttpFoundation\Request;
  * Access check for HMAC-signed service-to-service requests (`_hrefl_signed`).
  *
  * A client signs each request with its market's shared secret:
- *   canonical = METHOD \n PATH \n TIMESTAMP \n sha256(body)
+ *   canonical = METHOD \n PATH \n QUERY \n TIMESTAMP \n sha256(body)
  *   X-Hrefl-Signature = HMAC-SHA256(canonical, secret)
- * plus X-Hrefl-Market and X-Hrefl-Timestamp headers. The hub recomputes the
- * signature with that market's secret and compares in constant time, and
- * rejects stale timestamps to bound replay. Fails closed: any missing/invalid
- * element denies access.
+ * plus X-Hrefl-Market and X-Hrefl-Timestamp headers. QUERY is the query
+ * parameters key-sorted and re-encoded with http_build_query() ('' when there
+ * are none), matching the client's RequestSigner byte for byte. The hub
+ * recomputes the signature with that market's secret and compares in constant
+ * time, and rejects stale timestamps to bound replay. Fails closed: any
+ * missing/invalid element denies access.
+ *
+ * Replays of an identical request within the timestamp window are accepted
+ * (there is no nonce store); since the query and body are signed, a replay
+ * cannot be redirected at other data, only repeat an idempotent operation.
  */
 final class SignedRequestAccessCheck implements AccessInterface {
 
@@ -64,11 +70,24 @@ final class SignedRequestAccessCheck implements AccessInterface {
     $canonical = implode("\n", [
       strtoupper($request->getMethod()),
       $request->getPathInfo(),
+      self::canonicalQuery($request),
       (string) $timestamp,
       hash('sha256', (string) $request->getContent()),
     ]);
     $expected = hash_hmac('sha256', $canonical, $secret);
     return hash_equals($expected, $signature);
+  }
+
+  /**
+   * The canonical (key-sorted, re-encoded) form of the request's query string.
+   *
+   * Must produce the same bytes as RequestSigner::canonicalQuery() on the
+   * client for the same parameter set.
+   */
+  private static function canonicalQuery(Request $request): string {
+    $params = $request->query->all();
+    ksort($params);
+    return http_build_query($params);
   }
 
 }

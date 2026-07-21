@@ -19,8 +19,13 @@ hrefl_client.selector_feed:
 # The module's own multilingual XML sitemap (xhtml:link alternates + lastmod +
 # priority), generated from the local store. For large sites this is a sitemap
 # index pointing at the numbered chunk sitemaps below.
+#
+# Path note: NOT '/hrefl/sitemap.xml'. simple_sitemap installs an inbound path
+# processor that claims any '/{variant}/sitemap.xml', which would shadow this
+# route wherever that (very common) module is present. A single top-level
+# segment avoids the collision.
 hrefl_client.sitemap:
-  path: '/hrefl/sitemap.xml'
+  path: '/hrefl-sitemap.xml'
   defaults:
     _controller: 'Drupal\hrefl_client\Controller\SitemapController::sitemap'
   methods: [GET]
@@ -29,7 +34,7 @@ hrefl_client.sitemap:
 
 # One chunk of a large sitemap (referenced by the index above).
 hrefl_client.sitemap_chunk:
-  path: '/hrefl/sitemap.{page}.xml'
+  path: '/hrefl-sitemap.{page}.xml'
   defaults:
     _controller: 'Drupal\hrefl_client\Controller\SitemapController::chunk'
   methods: [GET]

@@ -126,10 +126,11 @@ final class AlternatesStore {
       $transaction->rollBack();
       throw $e;
     }
-    // Invalidate only the affected groups' pages.
-    if ($tags) {
-      $this->cacheTagsInvalidator->invalidateTags(array_keys($tags));
-    }
+    // Invalidate the affected groups' pages, plus the store-wide tag carried
+    // by pages/blocks rendered before they had a group (see
+    // hrefl_client_page_attachments()), so they pick up their new alternates.
+    $tags['hrefl_alternates'] = TRUE;
+    $this->cacheTagsInvalidator->invalidateTags(array_keys($tags));
   }
 
   private function hash(string $url): string {

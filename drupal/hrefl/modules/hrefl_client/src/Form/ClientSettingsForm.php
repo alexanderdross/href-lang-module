@@ -66,7 +66,7 @@ final class ClientSettingsForm extends ConfigFormBase {
     ];
     $form['sitemap_enabled'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Serve the multilingual sitemap at /hrefl/sitemap.xml'),
+      '#title' => $this->t('Serve the multilingual sitemap at /hrefl-sitemap.xml'),
       '#default_value' => $config->get('sitemap_enabled'),
     ];
     $form['sitemap_priority'] = [
