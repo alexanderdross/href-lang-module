@@ -99,7 +99,7 @@ final class Hrefl_Ai_Matcher {
             $pick = static fn(array $p): string => (string) ($p['choices'][0]['message']['content'] ?? '');
         }
 
-        $resp = wp_remote_post($endpoint, $args);
+        $resp = Hrefl_Http::post_json($endpoint, $args);
         if (is_wp_error($resp) || (int) wp_remote_retrieve_response_code($resp) >= 300) {
             error_log('[hrefl] AI request failed: ' . (is_wp_error($resp) ? $resp->get_error_message() : (string) wp_remote_retrieve_response_code($resp)));
             return null;

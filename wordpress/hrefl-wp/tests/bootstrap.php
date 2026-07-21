@@ -86,6 +86,7 @@ require_once $plugin . '/includes/class-hrefl-settings.php';
 require_once $plugin . '/includes/class-hrefl-markets.php';
 require_once $plugin . '/includes/class-hrefl-distributor.php';
 require_once $plugin . '/includes/class-hrefl-rest.php';
+require_once $plugin . '/includes/class-hrefl-http.php';
 require_once $plugin . '/includes/class-hrefl-vector-store.php';
 require_once $plugin . '/includes/class-hrefl-embedding-matcher.php';
 require_once $plugin . '/includes/class-hrefl-ai-matcher.php';

@@ -63,7 +63,7 @@ final class Anthropic extends AiMatcherBase {
   private function chat(string $system, string $user): ?string {
     $s = $this->providerSettings();
     try {
-      $response = $this->httpClient->request('POST', $s['endpoint'], [
+      $response = $this->requestWithRetry('POST', $s['endpoint'], [
         'headers' => [
           'x-api-key' => $this->apiKey(),
           'anthropic-version' => $s['api_version'] ?? '2023-06-01',

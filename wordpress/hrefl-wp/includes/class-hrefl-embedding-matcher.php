@@ -122,7 +122,7 @@ final class Hrefl_Embedding_Matcher {
         if ($key !== '') {
             $headers['authorization'] = 'Bearer ' . $key;
         }
-        $resp = wp_remote_post((string) Hrefl_Settings::get('embedding_endpoint', ''), [
+        $resp = Hrefl_Http::post_json((string) Hrefl_Settings::get('embedding_endpoint', ''), [
             'headers' => $headers,
             'body'    => wp_json_encode(['model' => Hrefl_Settings::get('embedding_model', ''), 'input' => $texts]),
             'timeout' => 30,
