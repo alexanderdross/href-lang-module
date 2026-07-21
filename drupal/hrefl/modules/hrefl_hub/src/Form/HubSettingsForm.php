@@ -13,7 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Hub configuration: canonical host, thresholds, and the AI matcher provider.
  *
- * The admin can run **either** Microsoft Copilot or Anthropic — both providers
+ * The admin can run **either** Microsoft Copilot or Anthropic - both providers
  * are fully supported. Each one's connection (endpoint, model, API key) is
  * configured here, and the "Active AI matcher provider" select decides which of
  * them the engine actually calls (for both adjudication and translation).
@@ -95,7 +95,7 @@ final class HubSettingsForm extends ConfigFormBase {
       '#type' => 'details',
       '#title' => $this->t('AI matcher (Tier C)'),
       '#open' => TRUE,
-      '#description' => $this->t('Copilot and Anthropic are both fully supported — neither is mandated. Configure either (or both) below, then choose which one the engine uses. The selected provider handles both adjudication and title/URL translation.'),
+      '#description' => $this->t('Copilot and Anthropic are both fully supported - neither is mandated. Configure either (or both) below, then choose which one the engine uses. The selected provider handles both adjudication and title/URL translation.'),
     ];
     $form['ai']['provider'] = [
       '#type' => 'select',
@@ -211,8 +211,8 @@ final class HubSettingsForm extends ConfigFormBase {
       // Leave $ready FALSE if the plugin cannot be built.
     }
     $status = $ready
-      ? $this->t('✔ Ready — endpoint, model and API key are all set.')
-      : $this->t('⚠ Not fully configured yet — needs an endpoint, a model and an API key.');
+      ? $this->t('✔ Ready - endpoint, model and API key are all set.')
+      : $this->t('⚠ Not fully configured yet - needs an endpoint, a model and an API key.');
 
     $set = [
       '#type' => 'details',

@@ -73,7 +73,7 @@ final class ReviewQueueForm extends FormBase {
         'market' => $member['market'],
         'hreflang' => $member['hreflang'],
         'status' => $member['status'],
-        'confidence' => $member['confidence'] !== NULL ? sprintf('%.2f', (float) $member['confidence']) : '—',
+        'confidence' => $member['confidence'] !== NULL ? sprintf('%.2f', (float) $member['confidence']) : '-',
         'valid' => ((int) $member['valid'] === 1) ? $this->t('yes') : $this->t('no'),
         'quick' => ['data' => $this->quickActions($id)],
       ];

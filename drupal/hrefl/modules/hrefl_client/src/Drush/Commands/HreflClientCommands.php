@@ -15,7 +15,7 @@ use Drush\Commands\DrushCommands;
  *
  * Phase 0 (POC): seed a hand-authored mapping straight into the local store
  * without standing up the hub, and inspect the emitted tags for a URL to
- * verify the reciprocal pair — the roadmap's "view-source" exit check.
+ * verify the reciprocal pair - the roadmap's "view-source" exit check.
  */
 final class HreflClientCommands extends DrushCommands {
 

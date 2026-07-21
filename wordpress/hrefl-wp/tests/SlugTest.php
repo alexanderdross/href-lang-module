@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for the leaf-slug extraction used by URL-pattern matching.
- * Standalone — no WordPress required.
+ * Standalone - no WordPress required.
  */
 final class SlugTest extends TestCase {
 

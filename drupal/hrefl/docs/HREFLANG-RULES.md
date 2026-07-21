@@ -110,4 +110,4 @@ proposal is never emitted to visitors or search engines.
 ## Sources
 
 - [Localized versions of your pages - Google Search Central](https://developers.google.com/search/docs/specialty/international/localized-versions)
-- [Multilingual and multinational site annotations in Sitemaps - Google Search Central blog (2012, the reference cited in WFACQUIA-81)](https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site)
+- [Multilingual and multinational site annotations in Sitemaps - Google Search Central blog (2012, the reference cited in the origin ticket)](https://developers.google.com/search/blog/2012/05/multilingual-and-multinational-site)

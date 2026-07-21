@@ -1,6 +1,6 @@
 # TA Decision One-Pager - href-langs-module
 
-Origin: WFACQUIA-81 · For: Technical Architecture discussion · Prepared: 15 July 2026
+For: Technical Architecture discussion · Prepared: 15 July 2026
 
 Six decisions gate the build. Each has a recommendation; please confirm or amend
 in the meeting. Full rationale lives in `docs/RECOMMENDATIONS.md`,

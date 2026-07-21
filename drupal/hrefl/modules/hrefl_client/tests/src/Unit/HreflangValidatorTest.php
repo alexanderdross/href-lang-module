@@ -105,9 +105,9 @@ final class HreflangValidatorTest extends UnitTestCase {
     $cleaned = $this->validator->clean([
       ['hreflang' => 'x-default', 'href' => 'https://ex.com/about-us'],
       ['hreflang' => 'en', 'href' => 'https://ex.com/about-us'],
-      // Duplicate code — dropped.
+      // Duplicate code - dropped.
       ['hreflang' => 'EN', 'href' => 'https://ex.com/other'],
-      // Second x-default — dropped.
+      // Second x-default - dropped.
       ['hreflang' => 'x-default', 'href' => 'https://ex.com/second'],
     ]);
     $this->assertSame([

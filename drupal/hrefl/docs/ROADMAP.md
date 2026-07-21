@@ -58,8 +58,8 @@ ambiguous middle band; the system learns.
 ## Phase 4 - Scale & platforms
 **Goal:** more markets, and the WordPress path (delivered).
 - Onboarding flow for new market backends (register → publish → match → review)
-  — the guided "Add market" admin screen is in place.
-- WordPress — **delivered** as a standalone all-WordPress plugin
+  - the guided "Add market" admin screen is in place.
+- WordPress - **delivered** as a standalone all-WordPress plugin
   (`../../wordpress/hrefl-wp/`, client + hub by role). It runs its own hub and
   does **not** share the Drupal hub (by decision).
 - Broader OPU/market rollout beyond Corporate.

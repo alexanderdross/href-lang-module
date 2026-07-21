@@ -30,7 +30,7 @@ final class SitemapController extends ControllerBase {
   }
 
   /**
-   * GET /hrefl-sitemap.xml — a urlset, or a sitemap index for large sites.
+   * GET /hrefl-sitemap.xml - a urlset, or a sitemap index for large sites.
    */
   public function sitemap(): Response {
     if (!$this->enabled()) {
@@ -40,7 +40,7 @@ final class SitemapController extends ControllerBase {
   }
 
   /**
-   * GET /hrefl-sitemap.{page}.xml — one chunk of a large sitemap.
+   * GET /hrefl-sitemap.{page}.xml - one chunk of a large sitemap.
    *
    * Route params arrive as strings (strict types); $page is cast here.
    */

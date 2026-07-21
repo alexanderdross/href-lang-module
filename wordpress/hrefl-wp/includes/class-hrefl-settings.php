@@ -4,7 +4,7 @@
  *
  * Options live under the `hrefl_settings` option. The shared HMAC secret is
  * read from the `HREFL_HUB_SECRET` constant (define it in wp-config.php) first,
- * falling back to the stored option — same idea as the Drupal env/key fallback.
+ * falling back to the stored option - same idea as the Drupal env/key fallback.
  */
 
 declare(strict_types=1);

@@ -1,6 +1,6 @@
 # Concept (v2 - rethought) - Automated Cross-Backend hreflang
 
-Status: draft for TA discussion · Origin: WFACQUIA-81 · Target: Drupal 10/11
+Status: draft for TA discussion · Target: Drupal 10/11
 
 This revision keeps the v1 topology and hub idea but re-centres the whole design
 on **automated, multi-signal URL auto-mapping** and holds every decision against
@@ -112,7 +112,7 @@ automated tests (Kernel/Functional) and CI; mapping is *content* (versioned,
 auditable), settings are *config*; idempotent, retrying, backed-off sync;
 observability (match rate, auto-confirm rate, coverage %, broken-link count);
 platform-neutral hub API. (A standalone WordPress plugin now also exists in
-`../../wordpress/hrefl-wp/` — all-WP, running its own hub, not sharing this one.)
+`../../wordpress/hrefl-wp/` - all-WP, running its own hub, not sharing this one.)
 
 ## 5. Why the multi-signal engine is the heart of it
 

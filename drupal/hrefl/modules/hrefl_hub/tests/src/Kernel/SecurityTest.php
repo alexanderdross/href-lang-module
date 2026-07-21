@@ -45,9 +45,9 @@ final class SecurityTest extends KernelTestBase {
     $payload = json_encode([
       'market' => 'de',
       'records' => [
-        // Owned by DE — accepted.
+        // Owned by DE - accepted.
         ['url' => 'https://pro.boehringer-ingelheim.com/de/ueber-uns', 'language' => 'de', 'hreflang' => 'de'],
-        // A US URL claimed by the DE client — must be rejected.
+        // A US URL claimed by the DE client - must be rejected.
         ['url' => 'https://pro.boehringer-ingelheim.com/us/about-us', 'language' => 'en', 'hreflang' => 'en-US'],
       ],
     ]);
@@ -116,11 +116,11 @@ final class SecurityTest extends KernelTestBase {
    */
   public function testSsrfAllowlistRejectsForeignHost(): void {
     $validator = $this->container->get('hrefl_hub.target_validator');
-    // Foreign host — refused at the allowlist (no DNS/fetch happens).
+    // Foreign host - refused at the allowlist (no DNS/fetch happens).
     $this->assertFalse($validator->isSafeUrl('https://evil.example/phish'));
-    // Non-http scheme — refused.
+    // Non-http scheme - refused.
     $this->assertFalse($validator->isSafeUrl('ftp://pro.boehringer-ingelheim.com/x'));
-    // Not absolute — refused.
+    // Not absolute - refused.
     $this->assertFalse($validator->isSafeUrl('/relative/path'));
   }
 

@@ -80,7 +80,7 @@ final class MarketRegistry {
   /**
    * Resolve a market's shared HMAC secret.
    *
-   * Returns '' when no secret is configured — callers must fail closed:
+   * Returns '' when no secret is configured - callers must fail closed:
    * - Unknown (unconfigured) markets never get a secret.
    * - A configured key_name that fails to resolve is an error, not a
    *   fall-through: no env fallback, so a broken key config cannot silently

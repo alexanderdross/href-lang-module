@@ -12,8 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Guided market management: add, edit, and remove the family's markets.
  *
- * A market owns an absolute URL prefix — a path under the shared host
- * (https://host/de/) or a whole domain (https://host.es/) — and names the
+ * A market owns an absolute URL prefix - a path under the shared host
+ * (https://host/de/) or a whole domain (https://host.es/) - and names the
  * key-module key holding its shared HMAC secret. This is the onboarding entry
  * point: add a market here, set the matching secret on its client, done.
  */
@@ -103,7 +103,7 @@ final class MarketsForm extends ConfigFormBase {
     $form['add']['prefix'] = [
       '#type' => 'url',
       '#title' => $this->t('Owned URL prefix'),
-      '#description' => $this->t('Absolute URL prefix — a path (https://host/fr/) or a domain (https://host.fr/).'),
+      '#description' => $this->t('Absolute URL prefix - a path (https://host/fr/) or a domain (https://host.fr/).'),
     ];
     $form['add']['key_name'] = [
       '#type' => 'textfield',
@@ -182,7 +182,7 @@ final class MarketsForm extends ConfigFormBase {
    */
   public function generateSecret(array &$form, FormStateInterface $form_state): void {
     $secret = bin2hex(random_bytes(32));
-    $this->messenger()->addStatus($this->t('New shared secret (copy it now — it is not stored): @s', ['@s' => $secret]));
+    $this->messenger()->addStatus($this->t('New shared secret (copy it now - it is not stored): @s', ['@s' => $secret]));
     $this->messenger()->addStatus($this->t('Store it in a key (key module) and enter the key name for the market, or set HREFL_HUB_SECRET on the hub and the matching client.'));
     $form_state->setRebuild();
   }

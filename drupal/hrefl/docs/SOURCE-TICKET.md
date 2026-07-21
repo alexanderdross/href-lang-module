@@ -1,12 +1,12 @@
-# Source Ticket - WFACQUIA-81 "href-lang meta-tags"
+# Source Ticket - "href-lang meta-tags"
 
-Captured from the Jira export in the project folder (`WFACQUIA-81.doc`, an HTML
+Captured from the Jira export in the project folder (an HTML
 export). This is the originating requirement; the concept in `docs/CONCEPT.md`
 is the response to it.
 
 ## Header
 
-- **Key / Title:** WFACQUIA-81 - href-lang meta-tags
+- **Title:** href-lang meta-tags
 - **Project:** Web Forward – Acquia · **Epic:** SEO · **Sprint:** Acquia Sprint 21
 - **Type:** Story · **Priority:** Medium · **Story Points:** 5
 - **Status:** Discovery · **Resolution:** Unresolved

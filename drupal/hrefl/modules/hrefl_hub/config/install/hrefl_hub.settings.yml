@@ -1,8 +1,8 @@
 # Default hub configuration. Secrets (API keys, service tokens) should be stored
 # via the key module in production, not here.
 canonical_host: 'https://pro.boehringer-ingelheim.com'
-# Market definitions. Each market owns an absolute URL prefix — a path prefix
-# under the shared host OR a separate domain — so both topologies are supported:
+# Market definitions. Each market owns an absolute URL prefix - a path prefix
+# under the shared host OR a separate domain - so both topologies are supported:
 #   pro.boehringer-ingelheim.com/de/   (path prefix)
 #   pro.boehringer-ingelheim.es/       (own domain)
 # key_name is the key-module key holding this market's shared HMAC secret.
@@ -27,7 +27,7 @@ thresholds:
 # When false, every match goes to review regardless of confidence.
 auto_confirm_enabled: false
 # AI matcher (Tier C). Either Microsoft Copilot or Anthropic may be used for
-# both adjudication and translation — both are fully supported; select one here.
+# both adjudication and translation - both are fully supported; select one here.
 ai_matcher:
   provider: 'copilot'
   # 'metadata' (default, governance-safe) or 'full' (opt-in, gated).

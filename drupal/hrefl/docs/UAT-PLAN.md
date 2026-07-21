@@ -1,4 +1,4 @@
-# UAT Plan — User Acceptance Testing
+# UAT Plan - User Acceptance Testing
 
 Manual, end-to-end scenarios written from the **operator’s** point of view
 (admin / editor / SEO), to sign off the module on a real staging environment.
@@ -10,7 +10,7 @@ Environment: at least **two** backends (e.g. Global `/` + Germany `/de/`), both
 with `hrefl_client`, the hub on Global, a shared `HREFL_HUB_SECRET`, cron
 runnable on demand (`drush cron`).
 
-## Phase 0 — Proof of life
+## Phase 0 - Proof of life
 
 | # | P | Scenario | Steps | Expected |
 |---|---|----------|-------|----------|
@@ -18,7 +18,7 @@ runnable on demand (`drush cron`).
 | 0.2 | P1 | Inspect via CLI | `drush hrefl:show https://…/de/ueber-uns` | Prints the same tag set as the page |
 | 0.3 | P2 | Safe degradation | Visit a page with no mapping | No hreflang tags emitted (no guessing), page renders normally |
 
-## Phase 1 — Hub + client contract
+## Phase 1 - Hub + client contract
 
 | # | P | Scenario | Steps | Expected |
 |---|---|----------|-------|----------|
@@ -29,7 +29,7 @@ runnable on demand (`drush cron`).
 | 1.5 | P1 | Only clean targets | Confirm a mapping whose target is a 404/noindex | Confirmation is **blocked/skipped**; nothing broken goes live |
 | 1.6 | P2 | Reject removes | Reject a proposal | It never appears in output; state = `rejected` |
 
-## Phase 2 — Automation + sitemap
+## Phase 2 - Automation + sitemap
 
 | # | P | Scenario | Steps | Expected |
 |---|---|----------|-------|----------|
@@ -39,7 +39,7 @@ runnable on demand (`drush cron`).
 | 2.4 | P2 | Sitemap index at scale | Lower `sitemap_chunk_size` to 2 (test) with ≥3 URLs | Entry point returns a `sitemapindex`; `…/hrefl-sitemap.0.xml` etc. return chunks |
 | 2.5 | P3 | AI translation help | Configure a provider; `drush hrefl-hub:translate-match` | New proposals carry a suggested title/slug shown in the queue |
 
-## Phase 3 — Operate
+## Phase 3 - Operate
 
 | # | P | Scenario | Steps | Expected |
 |---|---|----------|-------|----------|

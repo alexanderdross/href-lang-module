@@ -1,25 +1,25 @@
-# Changelog — hrefl (Drupal)
+# Changelog - hrefl (Drupal)
 
 All notable changes to the Drupal module. Dates are ISO (YYYY-MM-DD).
 
 **Versioning.** `v1` is the original module as first shipped; `v2` is the
 current, security-reviewed line and the only one under active development. v1 is
-frozen — it stays available (git tag `v1.0.0`) as a reference, but new work lands
+frozen - it stays available (git tag `v1.0.0`) as a reference, but new work lands
 on v2.
 
-## 2.0.0 — 2026-07-21 — security & correctness hardening (v2 · latest)
+## 2.0.0 - 2026-07-21 - security & correctness hardening (v2 · latest)
 
 The security- and code-quality-reviewed line (Factorial review). No feature
 changes versus v1; the module's behaviour is the same, with the defects below
 fixed. Tests were updated in lockstep, and the suites stay green on Drupal 11 /
 PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 
-### ⚠️ Breaking (fresh installs only — nothing is deployed yet)
+### ⚠️ Breaking (fresh installs only - nothing is deployed yet)
 
 - **Signing protocol v2.** The HMAC canonical string now covers the query
   string: `METHOD \n PATH \n QUERY \n TIMESTAMP \n sha256(body)` (QUERY is
   key-sorted and re-encoded so both sides derive the same bytes). A v1 client
-  cannot authenticate against a v2 hub — upgrade client and hub together.
+  cannot authenticate against a v2 hub - upgrade client and hub together.
 - **Sitemap route renamed** `/hrefl/sitemap.xml` → `/hrefl-sitemap.xml` (and the
   chunks `/hrefl-sitemap.N.xml`), avoiding a collision under the `/hrefl` path.
   Re-submit the new URL in Search Console.
@@ -28,14 +28,14 @@ PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 
 ### Critical
 
-1. **Ingest authz bypass** — `IngestController` now rejects a payload whose
+1. **Ingest authz bypass** - `IngestController` now rejects a payload whose
    `market` differs from the HMAC-verified `X-Hrefl-Market` header (403), so a
    site can no longer sign as itself but assert records for another market. Adds
    a 500-records/request cap (413). New kernel test covers the mismatch.
-2. **MySQL install failure** — the unique key on `url varchar(2048)` is now a
+2. **MySQL install failure** - the unique key on `url varchar(2048)` is now a
    191-char prefix key (the ceiling and the `url_hash` upgrade path are
    documented in a comment).
-3. **Store wipe** — `AlternatesConsumer` no longer calls `replaceAll([])` when
+3. **Store wipe** - `AlternatesConsumer` no longer calls `replaceAll([])` when
    every page fails validation; last known-good alternates survive a bad pull.
 
 ### Security
@@ -49,7 +49,7 @@ PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 6. The `import.csv` POST route now requires `_csrf_request_header_token`.
 7. `CsvImportForm` uses `managed_file` + a `FileExtension` validator (the temp
    file is deleted after use); `drupal:file` added as a dependency.
-8. `ServeController`'s referer-style `?market=` fallback is deleted — the market
+8. `ServeController`'s referer-style `?market=` fallback is deleted - the market
    comes only from the signed header.
 
 ### Correctness
@@ -90,7 +90,7 @@ Noted, not blocking: a nonce store for full replay prevention, streaming CSV
 export, a review-queue pager past 500 rows, DNS pinning in `TargetValidator`,
 and `HubSettingsForm` floor ≤ confirm validation.
 
-## 1.0.0 — 2026-07-15 — first release (v1 · original)
+## 1.0.0 - 2026-07-15 - first release (v1 · original)
 
 The original module, frozen at git tag `v1.0.0`. The complete client + hub
 architecture: reciprocal hreflang tags, the own multilingual XML sitemap, the

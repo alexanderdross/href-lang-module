@@ -45,7 +45,7 @@ final class MappingEngine {
     $floor = (float) $settings->get('thresholds.floor');
     $autoConfirm = (bool) $settings->get('auto_confirm_enabled');
 
-    // Tier A: deterministic. Honor the matcher's own provenance/confidence — an
+    // Tier A: deterministic. Honor the matcher's own provenance/confidence - an
     // identity key match is 1.0 (auto-confirmable), a URL-pattern match is lower
     // and routes to review.
     $a = $this->deterministic->resolve($record, $signals);

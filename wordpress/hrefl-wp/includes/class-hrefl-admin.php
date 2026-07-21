@@ -43,7 +43,7 @@ final class Hrefl_Admin {
     }
 
     /**
-     * Replaces the admin footer text with a Dross:Media credit — only on this
+     * Replaces the admin footer text with a Dross:Media credit - only on this
      * plugin's own pages, so the rest of wp-admin is untouched.
      */
     public function footer_text($text) {
@@ -159,7 +159,7 @@ final class Hrefl_Admin {
                         <td><?php echo esc_html($m['hreflang']); ?></td>
                         <td><a href="<?php echo esc_url($m['url']); ?>" target="_blank" rel="noopener"><?php echo esc_html($m['url']); ?></a></td>
                         <td><?php echo esc_html((string) $m['title']); ?></td>
-                        <td><?php echo ((int) $m['valid'] === 1) ? '✔' : '—'; ?></td>
+                        <td><?php echo ((int) $m['valid'] === 1) ? '✔' : '-'; ?></td>
                         <td>
                             <a class="button button-primary" href="<?php echo esc_url($confirm); ?>"><?php esc_html_e('Confirm', 'hrefl'); ?></a>
                             <a class="button" href="<?php echo esc_url($reject); ?>"><?php esc_html_e('Reject', 'hrefl'); ?></a>
