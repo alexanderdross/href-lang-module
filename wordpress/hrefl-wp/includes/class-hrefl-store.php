@@ -42,6 +42,12 @@ final class Hrefl_Store {
      */
     public function replace_all(array $pages): void {
         global $wpdb;
+        // Never wipe the store on an empty pull (hub down, or every page failed
+        // validation): keep the last known-good alternates rather than blanking
+        // every page's hreflang. Mirrors the Drupal AlternatesConsumer guard.
+        if (!$pages) {
+            return;
+        }
         $t = $this->table();
         $wpdb->query("TRUNCATE TABLE {$t}");
         $now = time();
@@ -81,6 +87,14 @@ final class Hrefl_Store {
             ];
         }
         return $out;
+    }
+
+    /**
+     * Total number of stored pages (for sitemap chunk maths).
+     */
+    public function count(): int {
+        global $wpdb;
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$this->table()}");
     }
 
     public static function hash(string $url): string {

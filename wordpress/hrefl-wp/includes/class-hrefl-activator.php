@@ -22,8 +22,10 @@ final class Hrefl_Activator {
         if (!wp_next_scheduled('hrefl_validate')) {
             wp_schedule_event(time() + 900, 'hourly', 'hrefl_validate');
         }
-        // The sitemap uses a rewrite rule registered on init.
+        // The sitemap uses rewrite rules registered on init: the entry point and
+        // the numbered chunks it indexes past 50k URLs.
         add_rewrite_rule('^hrefl-sitemap\.xml$', 'index.php?hrefl_sitemap=1', 'top');
+        add_rewrite_rule('^hrefl-sitemap\.([0-9]+)\.xml$', 'index.php?hrefl_sitemap=1&hrefl_chunk=$matches[1]', 'top');
         flush_rewrite_rules(false);
     }
 
@@ -34,7 +36,7 @@ final class Hrefl_Activator {
         flush_rewrite_rules(false);
     }
 
-    private static function create_tables(): void {
+    public static function create_tables(): void {
         global $wpdb;
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         $charset = $wpdb->get_charset_collate();
@@ -67,11 +69,14 @@ final class Hrefl_Activator {
             title text NULL,
             status varchar(16) NOT NULL DEFAULT 'proposed',
             valid tinyint(1) NOT NULL DEFAULT 0,
+            changed bigint(20) NOT NULL DEFAULT 0,
+            last_matched bigint(20) NOT NULL DEFAULT 0,
             PRIMARY KEY  (id),
             UNIQUE KEY url_hash (url_hash),
             KEY group_id (group_id),
             KEY market_status (market,status),
-            KEY path_key (path_key)
+            KEY path_key (path_key),
+            KEY last_matched (last_matched)
         ) $charset;";
 
         dbDelta($alt);

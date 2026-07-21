@@ -49,6 +49,7 @@ final class Hrefl_Registry {
             'title'    => isset($m['title']) ? (string) $m['title'] : null,
             'status'   => (string) ($m['status'] ?? 'proposed'),
             'valid'    => (int) ($m['valid'] ?? 0),
+            'changed'  => (int) ($m['changed'] ?? 0),
         ];
         $existing = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$t} WHERE url_hash = %s", $urlHash));
         if ($existing) {
@@ -92,10 +93,24 @@ final class Hrefl_Registry {
 
     public function members_needing_match(int $limit = 200): array {
         global $wpdb;
+        // Fair pass: never-matched and longest-ago-matched rows first, so a
+        // backlog beyond the limit cannot starve the tail or re-spend work on
+        // the same first N rows every run. Mirrors the Drupal last_matched order.
         return (array) $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$this->members()} WHERE status IN ('proposed','held') LIMIT %d",
+            "SELECT * FROM {$this->members()}
+             WHERE status IN ('proposed','held')
+             ORDER BY last_matched ASC, id ASC
+             LIMIT %d",
             $limit
         ), ARRAY_A);
+    }
+
+    /**
+     * Stamp a member as matched now, sending it to the back of the fair queue.
+     */
+    public function stamp_matched(int $id): void {
+        global $wpdb;
+        $wpdb->update($this->members(), ['last_matched' => time()], ['id' => $id]);
     }
 
     public function members_by_slug(array $slugs, string $exclude_market): array {

@@ -72,9 +72,16 @@ search engines which localized URL to rank for a given audience. See
 
 ## 7. Hub scalability
 
-- Stateless ingest/serve behind the Global backend; heavy work in queues.
-- Incremental everything: only changed URLs are re-embedded, re-matched,
-  re-distributed (`since` cursors on pull).
+- Ingest/serve behind the Global backend; heavy work (matching, embedding,
+  target validation) in queues off the request path.
+- Incremental where it counts: matching and embedding are cursor-based and only
+  touch never-/least-recently-processed members (fair pass); publish walks the
+  corpus with a nid cursor. **Note:** the client *pull* currently re-fetches the
+  whole resolved set and swaps the local store atomically (guarded so an empty
+  pull never wipes it); a `since` cursor on pull is a future optimization, not a
+  correctness requirement. The hub *serve* builds a market's set in one indexed
+  pass - fine off the render path, and the scaling point to watch at very large
+  markets.
 - Back-pressure: queues smooth publish spikes; retries with exponential backoff.
 
 ## 8. Performance budget (targets to verify)
@@ -83,6 +90,8 @@ search engines which localized URL to rank for a given audience. See
 - Added `<head>` weight where head tags are on: **minimal** (sitemap carries the
   bulk).
 - Selector: **0 blocking requests**, **0 CLS**, **< a few KB** JS/CSS.
-- Sitemap generation: off-peak, incremental, never on request.
+- Sitemap generation: built from the local store and served with a 1-hour edge
+  cache header (not rebuilt per request on a cache hit); reads never call the hub
+  or siblings.
 - Mapping freshness (event → live alternate): **minutes**, not the next daily
   cron.

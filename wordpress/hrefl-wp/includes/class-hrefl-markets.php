@@ -56,11 +56,41 @@ final class Hrefl_Markets {
         return array_keys($hosts);
     }
 
+    /**
+     * Resolve a market's HMAC secret. Fails closed and prefers per-market
+     * secrets over the shared one:
+     *
+     * - Empty or unknown (unconfigured) markets get no secret.
+     * - This site's own market authenticates with the local secret (it is
+     *   signing as itself).
+     * - A per-market secret - a `HREFL_HUB_SECRET_<MARKET>` constant or a stored
+     *   per-market value - wins, giving true per-market isolation.
+     * - Only then does it fall back to the shared `HREFL_HUB_SECRET` (the
+     *   simpler, lower-isolation setup): acceptable now that ingest binds the
+     *   payload market to this signed identity and enforces URL ownership.
+     */
     public static function secret_for(string $market): string {
+        if ($market === '') {
+            return '';
+        }
+        // This site's own market: authenticated by the local secret.
+        if ($market === (string) Hrefl_Settings::get('market')) {
+            return Hrefl_Settings::secret();
+        }
+        $m = self::markets();
+        if (!array_key_exists($market, $m)) {
+            return '';
+        }
+        $const = 'HREFL_HUB_SECRET_' . strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '_', $market));
+        if (defined($const) && constant($const)) {
+            return (string) constant($const);
+        }
+        if (!empty($m[$market]['secret'])) {
+            return (string) $m[$market]['secret'];
+        }
         if (defined('HREFL_HUB_SECRET') && HREFL_HUB_SECRET) {
             return (string) HREFL_HUB_SECRET;
         }
-        $m = self::markets();
-        return (string) ($m[$market]['secret'] ?? Hrefl_Settings::get('secret', ''));
+        return (string) Hrefl_Settings::get('secret', '');
     }
 }

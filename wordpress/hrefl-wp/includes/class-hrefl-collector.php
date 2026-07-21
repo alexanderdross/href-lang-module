@@ -15,10 +15,30 @@ if (!defined('ABSPATH')) {
 
 final class Hrefl_Collector {
 
+    private const CURSOR = 'hrefl_publish_cursor';
+
+    /**
+     * Collect the next slice of the corpus (cursor-based), so a site of any
+     * size is fully published across successive cron runs instead of only its
+     * newest N posts. Ordered by ID so the walk is stable; wraps at the end.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function collect_next(int $limit = 200): array {
+        $offset = (int) get_option(self::CURSOR, 0);
+        $records = $this->collect($limit, $offset);
+        if (count($records) < $limit) {
+            update_option(self::CURSOR, 0, false); // wrap to the start
+        } else {
+            update_option(self::CURSOR, $offset + $limit, false);
+        }
+        return $records;
+    }
+
     /**
      * @return array<int,array<string,mixed>>
      */
-    public function collect(int $limit = 200): array {
+    public function collect(int $limit = 200, int $offset = 0): array {
         $market = (string) Hrefl_Settings::get('market');
         $lang   = self::site_lang();
         $map    = Hrefl_Settings::lang_map();
@@ -31,8 +51,9 @@ final class Hrefl_Collector {
             'post_type'        => array_values($types),
             'post_status'      => 'publish',
             'numberposts'      => $limit,
-            'orderby'          => 'modified',
-            'order'            => 'DESC',
+            'offset'           => $offset,
+            'orderby'          => 'ID',
+            'order'            => 'ASC',
             'suppress_filters' => true,
         ]);
 

@@ -34,7 +34,7 @@ final class Hrefl_Distributor {
             $pages[] = [
                 'url'        => (string) $member['url'],
                 'alternates' => $alternates,
-                'lastmod'    => null,
+                'lastmod'    => !empty($member['changed']) ? (int) $member['changed'] : null,
             ];
         }
         return $pages;

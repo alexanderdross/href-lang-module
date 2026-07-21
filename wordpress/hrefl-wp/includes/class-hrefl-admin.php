@@ -85,7 +85,7 @@ final class Hrefl_Admin {
                     <tr><th><?php esc_html_e('Hub REST URL', 'hrefl'); ?></th>
                         <td><input type="url" name="hub_url" value="<?php echo esc_attr($s['hub_url']); ?>" class="regular-text" placeholder="https://main-site/wp-json/hrefl/v1"></td></tr>
                     <tr><th><?php esc_html_e('Shared secret', 'hrefl'); ?></th>
-                        <td><input type="text" name="secret" value="<?php echo esc_attr($s['secret']); ?>" class="regular-text">
+                        <td><input type="password" name="secret" value="<?php echo esc_attr($s['secret']); ?>" class="regular-text" autocomplete="off">
                         <p class="description"><?php esc_html_e('Prefer defining HREFL_HUB_SECRET in wp-config.php. Same value on hub and every client.', 'hrefl'); ?></p></td></tr>
                     <tr><th><?php esc_html_e('Emit hreflang head tags', 'hrefl'); ?></th>
                         <td><label><input type="checkbox" name="emit_head" value="1" <?php checked($s['emit_head']); ?>> <?php esc_html_e('on', 'hrefl'); ?></label></td></tr>
