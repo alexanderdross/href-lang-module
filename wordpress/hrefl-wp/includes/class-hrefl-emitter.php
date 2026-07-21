@@ -43,6 +43,9 @@ final class Hrefl_Emitter {
 
     /**
      * Shortcode [hrefl_selector]: a crawlable country/language switcher.
+     *
+     * The visible text is a human-readable label ("English (United States)"),
+     * while hreflang/lang stay the machine code.
      */
     public function render_selector($atts = []): string {
         $items = [];
@@ -51,9 +54,10 @@ final class Hrefl_Emitter {
                 continue;
             }
             $items[] = sprintf(
-                '<li><a hreflang="%1$s" lang="%1$s" rel="alternate" href="%2$s">%1$s</a></li>',
+                '<li><a hreflang="%1$s" lang="%1$s" rel="alternate" href="%2$s">%3$s</a></li>',
                 esc_attr($alt['hreflang']),
-                esc_url($alt['href'])
+                esc_url($alt['href']),
+                esc_html(Hrefl_Locale::label($alt['hreflang']))
             );
         }
         if (!$items) {
@@ -61,6 +65,47 @@ final class Hrefl_Emitter {
         }
         return '<ul class="hrefl-selector" aria-label="' . esc_attr__('Country and language', 'hrefl') . '">'
             . implode('', $items) . '</ul>';
+    }
+
+    /**
+     * The selector as data, for a headless / decoupled front end.
+     *
+     * @return array<int,array{hreflang:string,label:string,href:string}>
+     */
+    public function selector_data(string $url): array {
+        $out = [];
+        foreach ($this->alternates($url) as $alt) {
+            if ($alt['hreflang'] === 'x-default') {
+                continue;
+            }
+            $out[] = [
+                'hreflang' => $alt['hreflang'],
+                'label'    => Hrefl_Locale::label($alt['hreflang']),
+                'href'     => $alt['href'],
+            ];
+        }
+        return $out;
+    }
+
+    /**
+     * template_redirect callback: emit hreflang as HTTP Link headers on
+     * non-HTML responses (feeds, attachments), where a <head> tag is not an
+     * option. Mirrors the Drupal LinkHeaderSubscriber.
+     */
+    public function send_link_header(): void {
+        if (headers_sent() || !Hrefl_Settings::get('emit_head')) {
+            return;
+        }
+        if (!is_feed() && !is_attachment()) {
+            return;
+        }
+        foreach ($this->alternates(self::current_url()) as $alt) {
+            header(sprintf(
+                'Link: <%s>; rel="alternate"; hreflang="%s"',
+                esc_url_raw($alt['href']),
+                $alt['hreflang']
+            ), false);
+        }
     }
 
     /**

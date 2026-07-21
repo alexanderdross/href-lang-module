@@ -43,6 +43,12 @@ if (!function_exists('get_option')) {
         return $GLOBALS['hrefl_test_options'][$key] ?? $default;
     }
 }
+if (!function_exists('__')) {
+    function __(string $text, string $domain = 'default'): string
+    {
+        return $text;
+    }
+}
 
 // Minimal WP_REST_* stubs so the REST controller's reject paths (which return
 // before any DB access) can be unit-tested without a WordPress install.
@@ -73,6 +79,7 @@ if (!class_exists('WP_REST_Response')) {
 
 $plugin = dirname(__DIR__);
 require_once $plugin . '/includes/class-hrefl-validator.php';
+require_once $plugin . '/includes/class-hrefl-locale.php';
 require_once $plugin . '/includes/class-hrefl-signer.php';
 require_once $plugin . '/includes/class-hrefl-registry.php';
 require_once $plugin . '/includes/class-hrefl-settings.php';

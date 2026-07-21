@@ -31,6 +31,7 @@ foreach ([
     'includes/class-hrefl-settings.php',
     'includes/class-hrefl-signer.php',
     'includes/class-hrefl-validator.php',
+    'includes/class-hrefl-locale.php',
     'includes/class-hrefl-activator.php',
     'includes/class-hrefl-store.php',
     'includes/class-hrefl-collector.php',

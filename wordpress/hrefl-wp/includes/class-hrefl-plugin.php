@@ -39,6 +39,25 @@ final class Hrefl_Plugin {
         if (Hrefl_Settings::is_client()) {
             add_action('wp_head', [$emitter, 'render_head'], 1);
             add_shortcode('hrefl_selector', [$emitter, 'render_selector']);
+            // HTTP Link header for non-HTML responses (feeds, attachments).
+            add_action('template_redirect', [$emitter, 'send_link_header']);
+            // Headless selector feed: GET /wp-json/hrefl/v1/selector?url=...
+            add_action('rest_api_init', static function () use ($emitter): void {
+                register_rest_route(HREFL_REST_NS, '/selector', [
+                    'methods'             => 'GET',
+                    'permission_callback' => '__return_true',
+                    'callback'            => static function (WP_REST_Request $request) use ($emitter): WP_REST_Response {
+                        $url = (string) $request->get_param('url');
+                        if ($url === '') {
+                            $url = Hrefl_Emitter::current_url();
+                        }
+                        return new WP_REST_Response([
+                            'url'   => $url,
+                            'items' => $emitter->selector_data($url),
+                        ], 200);
+                    },
+                ]);
+            });
             add_action('hrefl_sync', [$this, 'cron_sync']);
         }
 
