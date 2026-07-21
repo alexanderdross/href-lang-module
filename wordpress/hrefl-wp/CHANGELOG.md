@@ -2,9 +2,10 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
-## Unreleased (0.3.0) - feature parity with Drupal
+## 0.3.0 - 2026-07-21 - feature parity with Drupal
 
-Closing the documented condensed-port gaps, landing in stages:
+Closes the documented condensed-port gaps - the WordPress plugin now matches the
+Drupal module feature-for-feature:
 
 - **Human-readable selector labels** - the switcher shows "English (United
   States)" / "Deutsch" (endonyms) instead of the raw code; `hreflang`/`lang`
@@ -34,6 +35,15 @@ Closing the documented condensed-port gaps, landing in stages:
   page before one atomic store swap. A large market is never built, serialized,
   or transferred in a single response; the client caps the walk at 500 pages so
   a hostile cursor cannot loop. Small sites still resolve in one page.
+- **CSV review round-trip** - a new "CSV review" hub page exports every mapping
+  (`Hrefl_Csv`, formula-injection-safe cells) with a `decision` column, and
+  accepts the edited file back; each `confirm` passes the same correctness guard
+  as the on-screen queue (`Hrefl_Review_Actions`, now shared by both paths), and
+  a row that would break its group is reported blocked, never half-applied.
+- **Health dashboard** - a new "Health" hub page (`Hrefl_Monitor`) reports
+  coverage, status totals, and structural issues: confirmed targets that failed
+  validation, hreflang collisions inside a group, groups with no x-default, and
+  confirmed members with nothing to link to. Read-only; fixes go through review.
 
 ## 0.2.0 - 2026-07-21 - security & scale hardening
 

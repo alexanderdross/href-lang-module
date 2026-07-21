@@ -191,6 +191,57 @@ final class Hrefl_Registry {
     }
 
     /**
+     * Every member, oldest first, for the CSV review export.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function all_members(): array {
+        global $wpdb;
+        return (array) $wpdb->get_results("SELECT * FROM {$this->members()} ORDER BY group_id ASC, id ASC", ARRAY_A);
+    }
+
+    /**
+     * The member id for a URL, or null. Used to apply a CSV decision row.
+     */
+    public function member_id_for_url(string $url): ?int {
+        $member = $this->member_by_url($url);
+        return $member ? (int) $member['id'] : null;
+    }
+
+    /**
+     * Member counts keyed by status, for the health dashboard.
+     *
+     * @return array<string,int>
+     */
+    public function status_counts(): array {
+        global $wpdb;
+        $rows = (array) $wpdb->get_results("SELECT status, COUNT(*) AS n FROM {$this->members()} GROUP BY status", ARRAY_A);
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(string) $r['status']] = (int) $r['n'];
+        }
+        return $out;
+    }
+
+    /**
+     * Every confirmed member, for the health dashboard graph checks.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function all_confirmed_members(): array {
+        global $wpdb;
+        return (array) $wpdb->get_results("SELECT * FROM {$this->members()} WHERE status = 'confirmed' ORDER BY group_id ASC", ARRAY_A);
+    }
+
+    /**
+     * Total translation groups.
+     */
+    public function count_groups(): int {
+        global $wpdb;
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$this->groups()}");
+    }
+
+    /**
      * Leaf slug of a URL (for URL-pattern matching).
      */
     public static function slug(string $url): string {
