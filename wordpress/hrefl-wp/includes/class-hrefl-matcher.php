@@ -20,7 +20,8 @@ final class Hrefl_Matcher {
     public function run(int $limit = 200): void {
         $matched = 0;
         foreach ($this->registry->members_needing_match($limit) as $member) {
-            if ($this->match_one($member)) {
+            // Tier A (slug) first; fall back to Tier B/C (embeddings + LLM).
+            if ($this->match_one($member) || $this->ai_match($member)) {
                 $matched++;
             }
             // Stamp every processed member (matched or not) so the next run moves
@@ -30,6 +31,79 @@ final class Hrefl_Matcher {
         if ($matched) {
             $this->registry->delete_empty_groups();
         }
+    }
+
+    /**
+     * Tier B/C: embeddings surface candidates, the LLM adjudicates. Joins the
+     * chosen candidate's group (stays 'proposed' for human review). No-op unless
+     * embeddings are configured.
+     *
+     * @param array<string,mixed> $member
+     */
+    private function ai_match(array $member): bool {
+        $embed = new Hrefl_Embedding_Matcher($this->registry, new Hrefl_Vector_Store());
+        if (!$embed->is_configured()) {
+            return false;
+        }
+        $embed->ensure_embedded($member);
+        $candidates = $embed->candidates_for($member);
+        if (!$candidates) {
+            return false;
+        }
+
+        $ai = new Hrefl_Ai_Matcher();
+        if ($ai->is_configured()) {
+            $verdict = $ai->adjudicate($this->source_record($member), $candidates);
+            $min = (float) Hrefl_Settings::get('ai_confidence', 0.6);
+            if ($verdict['choice'] !== null && $verdict['confidence'] >= $min) {
+                return $this->join_group($member, (string) $candidates[$verdict['choice']]['group_id']);
+            }
+            return false;
+        }
+
+        // No LLM: accept the top embedding candidate only if very confident.
+        $top = $candidates[0];
+        if ((float) ($top['embedding_score'] ?? 0.0) >= (float) Hrefl_Settings::get('embedding_autojoin', 0.9)) {
+            return $this->join_group($member, (string) $top['group_id']);
+        }
+        return false;
+    }
+
+    /**
+     * @param array<string,mixed> $member
+     *
+     * @return array<string,mixed>
+     */
+    private function source_record(array $member): array {
+        return [
+            'url'      => (string) $member['url'],
+            'market'   => (string) $member['market'],
+            'language' => (string) ($member['lang'] ?? ''),
+            'title'    => (string) ($member['title'] ?? ''),
+        ];
+    }
+
+    /**
+     * Move a member into an existing group (proposed - human still confirms).
+     *
+     * @param array<string,mixed> $member
+     */
+    private function join_group(array $member, string $group_id): bool {
+        if ($group_id === '' || $group_id === (string) $member['group_id']) {
+            return false;
+        }
+        $this->registry->upsert_member([
+            'group_id' => $group_id,
+            'market'   => (string) $member['market'],
+            'language' => (string) ($member['lang'] ?? ''),
+            'hreflang' => (string) ($member['hreflang'] ?? ''),
+            'url'      => (string) $member['url'],
+            'title'    => $member['title'] ?? null,
+            'status'   => 'proposed',
+            'valid'    => (int) ($member['valid'] ?? 0),
+            'changed'  => (int) ($member['changed'] ?? 0),
+        ]);
+        return true;
     }
 
     private function match_one(array $member): bool {

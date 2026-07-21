@@ -37,6 +37,23 @@ final class Hrefl_Settings {
             'markets'         => [],
             // HMAC secret fallback (prefer the HREFL_HUB_SECRET constant).
             'secret'          => '',
+            // Tier C - AI adjudication (optional). '' | 'anthropic' | 'copilot'.
+            'ai_provider'      => '',
+            'ai_endpoint'      => '',
+            'ai_model'         => '',
+            'ai_api_version'   => '2023-06-01',
+            'ai_data_scope'    => 'metadata',
+            'ai_key'           => '',
+            // Min AI confidence to propose a match (still human-reviewed).
+            'ai_confidence'    => 0.6,
+            // Tier B - embeddings (optional, self-hosted preferred).
+            'embedding_endpoint'  => '',
+            'embedding_model'     => '',
+            'embedding_key'       => '',
+            'embedding_top_k'     => 5,
+            'embedding_threshold' => 0.82,
+            // Without AI: join the top embedding candidate above this score.
+            'embedding_autojoin'  => 0.9,
         ];
         return array_merge($defaults, (array) get_option(self::OPTION, []));
     }

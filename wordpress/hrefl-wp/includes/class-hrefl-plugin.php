@@ -109,7 +109,11 @@ final class Hrefl_Plugin {
         if (!Hrefl_Settings::is_hub()) {
             return;
         }
-        (new Hrefl_Matcher(new Hrefl_Registry()))->run();
+        $registry = new Hrefl_Registry();
+        // Tier B warm-up: embed members missing a vector so candidate search
+        // has something to compare against. No-op unless embeddings are set up.
+        (new Hrefl_Embedding_Matcher($registry, new Hrefl_Vector_Store()))->embed_pass();
+        (new Hrefl_Matcher($registry))->run();
     }
 
     /**

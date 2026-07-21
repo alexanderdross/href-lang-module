@@ -113,6 +113,22 @@ final class Hrefl_Registry {
         $wpdb->update($this->members(), ['last_matched' => time()], ['id' => $id]);
     }
 
+    /**
+     * Members that have no stored embedding vector yet (Tier-B warm-up).
+     */
+    public function members_missing_embedding(int $limit = 200): array {
+        global $wpdb;
+        $m = $this->members();
+        $e = $wpdb->prefix . 'hrefl_embedding';
+        return (array) $wpdb->get_results($wpdb->prepare(
+            "SELECT m.* FROM {$m} m
+             LEFT JOIN {$e} e ON e.url_hash = m.url_hash
+             WHERE e.url_hash IS NULL AND m.status IN ('proposed','held','confirmed')
+             ORDER BY m.id ASC LIMIT %d",
+            $limit
+        ), ARRAY_A);
+    }
+
     public function members_by_slug(array $slugs, string $exclude_market): array {
         global $wpdb;
         $slugs = array_values(array_unique(array_filter($slugs, static fn($s) => $s !== '')));
