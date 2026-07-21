@@ -7,6 +7,7 @@ namespace Drupal\hrefl_client\Controller;
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\hrefl_client\HreflLocale;
 use Drupal\hrefl_client\Service\HreflangEmitter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,7 +44,10 @@ final class SelectorController extends ControllerBase {
     }
     $response = new CacheableJsonResponse([
       'url' => $url,
-      'alternates' => $this->emitter->alternates($url),
+      'alternates' => array_map(
+        static fn(array $a): array => $a + ['label' => HreflLocale::label((string) ($a['hreflang'] ?? ''))],
+        $this->emitter->alternates($url)
+      ),
     ]);
     $meta = (new CacheableMetadata())
       ->addCacheContexts(['url.query_args:url'])

@@ -2,6 +2,18 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
+## Unreleased (0.3.0) - feature parity with Drupal
+
+Closing the documented condensed-port gaps, landing in stages:
+
+- **Human-readable selector labels** - the switcher shows "English (United
+  States)" / "Deutsch" (endonyms) instead of the raw code; `hreflang`/`lang`
+  stay the machine code. New `Hrefl_Locale` helper.
+- **Headless selector feed** - `GET /wp-json/hrefl/v1/selector?url=...` returns
+  the labelled alternates as JSON (public, reads the local store).
+- **HTTP Link header** - hreflang alternates are emitted as `Link:` headers on
+  non-HTML responses (feeds, attachments), where a `<head>` tag is not an option.
+
 ## 0.2.0 - 2026-07-21 - security & scale hardening
 
 Closes the findings from the cross-platform assessment. The plugin was a
