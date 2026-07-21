@@ -1,22 +1,22 @@
-# SETUP — Installing hrefl (beginner’s guide)
+# SETUP - Installing hrefl (beginner’s guide)
 
 This page gets the **hrefl** module *installed and running*. It assumes no prior
 knowledge of the module and explains each command. When you’re done, follow
 [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md) to configure it.
 
-> **You need command-line access to your Drupal sites** (or someone who has it —
+> **You need command-line access to your Drupal sites** (or someone who has it -
 > your developer or hosting team). Installing a Drupal module can’t be done from
 > the browser alone, because the code has to be downloaded first. Once it’s
 > installed, all the *configuration* is done by clicking (see the setup guide).
 
 ---
 
-## 0. Before you begin — checklist
+## 0. Before you begin - checklist
 
 - [ ] One or more **Drupal 10.3 or 11** websites (your country sites).
 - [ ] **Composer** available on each site (the PHP package manager).
 - [ ] **Drush** available (the Drupal command-line tool). Optional but
-      recommended — you can also click in the admin UI instead.
+      recommended - you can also click in the admin UI instead.
 - [ ] Ability to set an **environment variable** on the server (for the shared
       password). Your hosting team can do this.
 
@@ -28,7 +28,7 @@ knowledge of the module and explains each command. When you’re done, follow
 
 > **All your sites must be Drupal.** This module only talks to other Drupal
 > sites running the same module. There is a separate WordPress plugin, but the
-> two are **not** interoperable — you cannot have the hub on Drupal and a client
+> two are **not** interoperable - you cannot have the hub on Drupal and a client
 > on WordPress. A mixed family needs one family per platform, each with its own
 > hub.
 
@@ -43,7 +43,7 @@ composer require boehringer-ingelheim/hrefl
 ```
 
 `composer require` downloads the module and its dependencies into your project.
-It does **not** turn anything on yet — that’s the next step.
+It does **not** turn anything on yet - that’s the next step.
 
 > If your project isn’t managed by Composer, download the module folder into
 > `web/modules/custom/hrefl` (or `modules/custom/hrefl`) manually. Composer is
@@ -55,7 +55,7 @@ It does **not** turn anything on yet — that’s the next step.
 
 You can do this with Drush **or** by clicking in the admin area.
 
-### Option A — Drush (fastest)
+### Option A - Drush (fastest)
 
 On **every** site:
 ```bash
@@ -66,13 +66,13 @@ On the **Global/main** site only, additionally:
 drush en hrefl_hub
 ```
 
-### Option B — Admin UI (no command line)
+### Option B - Admin UI (no command line)
 
 1. Go to **Extend** (`/admin/modules`).
-2. Tick **“Hreflang Client”** and click **Install** — on every site.
+2. Tick **“Hreflang Client”** and click **Install** - on every site.
 3. On the Global site, also tick **“Hreflang Hub”** and install it.
 
-> You’ll see an umbrella item called **“Hreflang Cross-Backend”** — it has no
+> You’ll see an umbrella item called **“Hreflang Cross-Backend”** - it has no
 > code of its own; you only need the two sub-modules above.
 
 ---
@@ -136,7 +136,7 @@ This makes Drupal pick up the new routes, services and admin pages.
    ```bash
    drush hrefl:show https://your-site.example/some-page
    ```
-   With nothing configured yet it will simply report “no stored alternates” —
+   With nothing configured yet it will simply report “no stored alternates” -
    that’s expected at this point.
 
 If all three work, installation is complete.
@@ -153,7 +153,7 @@ HREFL_COPILOT_KEY=...        # Microsoft Copilot
 HREFL_ANTHROPIC_KEY=...      # Anthropic (pick one; both are supported)
 ```
 
-The module works fine with **no AI** — you can skip this and add it later.
+The module works fine with **no AI** - you can skip this and add it later.
 
 ---
 
@@ -162,18 +162,18 @@ The module works fine with **no AI** — you can skip this and add it later.
 | Problem | Fix |
 |---|---|
 | `composer require` can’t find the package | Check the package name and that your Composer repositories include it; your developer may need to add a repository entry. |
-| “Module not found” on Extend | The code isn’t downloaded yet — do Step 1 first, then clear cache (Step 5). |
+| “Module not found” on Extend | The code isn’t downloaded yet - do Step 1 first, then clear cache (Step 5). |
 | `drush: command not found` | Use the admin UI (Option B / `/update.php`) instead, or ask your developer to install Drush. |
 | Update errors after install | Re-run `drush updatedb`; make sure you ran it on the site where you enabled the module. |
-| Admin pages give “Access denied” | Your user needs the permission *Administer Hreflang Client/Hub* — grant it at `/admin/people/permissions`. |
-| Nothing happens between sites | That’s configuration, not installation — continue to the setup guide below. |
+| Admin pages give “Access denied” | Your user needs the permission *Administer Hreflang Client/Hub* - grant it at `/admin/people/permissions`. |
+| Nothing happens between sites | That’s configuration, not installation - continue to the setup guide below. |
 
 ---
 
 ## Next step: configure it
 
-Installation is done. Now connect and configure the sites — a mostly
-point-and-click process — using the full guide:
+Installation is done. Now connect and configure the sites - a mostly
+point-and-click process - using the full guide:
 
 **→ [`docs/SETUP-GUIDE.md`](docs/SETUP-GUIDE.md)**
 

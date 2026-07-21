@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Emits hreflang as an HTTP `Link` header — the third emission method.
+ * Emits hreflang as an HTTP `Link` header - the third emission method.
  *
  * Head `<link>` tags cannot be injected into non-HTML responses (e.g. PDFs), so
  * for those this adds `Link: <url>; rel="alternate"; hreflang="…"` from the same

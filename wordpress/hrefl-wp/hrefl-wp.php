@@ -12,7 +12,7 @@
  *
  * WordPress port of the Drupal `hrefl` module. Self-contained: a WordPress-only
  * family uses this; it does not interoperate with the Drupal hub (by design).
- * The architecture mirrors the Drupal version — see README.md for the mapping.
+ * The architecture mirrors the Drupal version - see README.md for the mapping.
  */
 
 declare(strict_types=1);

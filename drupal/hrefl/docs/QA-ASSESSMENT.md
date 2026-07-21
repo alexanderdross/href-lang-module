@@ -27,13 +27,13 @@ it production‑ready. Companion documents: `UAT-PLAN.md`,
 
 ## 2. Test strategy (the pyramid)
 
-- **Unit** — pure logic, no container: code/URL validation, cosine, slug
+- **Unit** - pure logic, no container: code/URL validation, cosine, slug
   normalization, translation parsing, structural group validation.
-- **Kernel** — services + database + config, no browser: matching/coalescing,
+- **Kernel** - services + database + config, no browser: matching/coalescing,
   serve/confirm guard, CSV, vector store, monitor, access check, forms.
-- **Functional / Browser** — *not yet written*; requires a full site. Covered by
+- **Functional / Browser** - *not yet written*; requires a full site. Covered by
   the manual UAT script (`UAT-PLAN.md`) until automated.
-- **Static** — Drupal coding standards (`phpcs`) + `phpstan`; run in CI.
+- **Static** - Drupal coding standards (`phpcs`) + `phpstan`; run in CI.
 
 ## 3. Automated test inventory
 
@@ -86,23 +86,23 @@ On a real Drupal 10.3/11 install:
 1. `composer install`; `drush en hrefl_client hrefl_hub`; **`drush updatedb`**
    (schema updates: `path_key`, `title`, `image`, client `lastmod`,
    `hrefl_embedding`, `markets` config).
-2. **`vendor/bin/phpunit`** — all listed tests green.
-3. **`phpcs --standard=Drupal,DrupalPractice web/modules/custom/hrefl`** — no
-   errors; **`phpstan`** at the project level — no new errors.
-4. **UAT script** (`UAT-PLAN.md`) — all P1 scenarios pass.
-5. **Security checklist** (`SECURITY-TEST-PLAN.md`) — all items pass.
-6. **Performance budget** (`PERFORMANCE-TEST-PLAN.md`) — met on staging.
+2. **`vendor/bin/phpunit`** - all listed tests green.
+3. **`phpcs --standard=Drupal,DrupalPractice web/modules/custom/hrefl`** - no
+   errors; **`phpstan`** at the project level - no new errors.
+4. **UAT script** (`UAT-PLAN.md`) - all P1 scenarios pass.
+5. **Security checklist** (`SECURITY-TEST-PLAN.md`) - all items pass.
+6. **Performance budget** (`PERFORMANCE-TEST-PLAN.md`) - met on staging.
 
 ## 6. Known gaps / not covered
 
-- **No Functional/Browser tests** — the selector block, admin forms rendering,
+- **No Functional/Browser tests** - the selector block, admin forms rendering,
   and end-to-end sync are covered only by the manual UAT script.
-- **Tier C (Copilot/Anthropic) untested against a live endpoint** — only the
+- **Tier C (Copilot/Anthropic) untested against a live endpoint** - only the
   request-building and response-parsing logic is unit-tested; provider calls
   need an integration test with a stub HTTP server or a sandbox key.
 - **Tier B embeddings inert** until an embedding endpoint is configured; the
   store + cosine are tested, the provider call is not.
 - **Tier-A identity signals** (schema.org `@id`, existing hreflang) are defined
-  in the matcher but not yet collected by `InventoryCollector` — matching leans
+  in the matcher but not yet collected by `InventoryCollector` - matching leans
   on slug + glossary until then.
-- **Load/soak testing** not done — see `PERFORMANCE-TEST-PLAN.md` for the plan.
+- **Load/soak testing** not done - see `PERFORMANCE-TEST-PLAN.md` for the plan.

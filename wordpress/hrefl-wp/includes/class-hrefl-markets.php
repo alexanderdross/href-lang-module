@@ -2,7 +2,7 @@
 /**
  * Market definitions: URL-ownership, host allowlist, per-market secret.
  *
- * A market owns an absolute URL prefix — a path or a whole domain — so both
+ * A market owns an absolute URL prefix - a path or a whole domain - so both
  * topologies work. Mirrors the Drupal MarketRegistry. Secrets come from the
  * HREFL_HUB_SECRET constant or the stored per-market value.
  */

@@ -57,7 +57,7 @@ final class SignedRequestAccessCheckTest extends KernelTestBase {
 
   public function testStaleTimestampIsForbidden(): void {
     $body = '{"market":"de","records":[]}';
-    // 10 minutes old — outside the 5-minute replay window.
+    // 10 minutes old - outside the 5-minute replay window.
     $ts = $this->container->get('datetime.time')->getRequestTime() - 600;
     $request = $this->signedRequest($body, self::SECRET, $ts, 'de');
     $this->assertFalse($this->check($request)->isAllowed());

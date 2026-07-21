@@ -90,7 +90,7 @@ final class HubSettingsFormTest extends KernelTestBase {
     $this->assertSame('2024-01-01', $config->get('providers.anthropic.api_version'));
     $this->assertSame('anthropic_api_key', $config->get('providers.anthropic.key_name'));
 
-    // Governance: the key is referenced by name only — no raw secret in config.
+    // Governance: the key is referenced by name only - no raw secret in config.
     $this->assertNull($config->get('providers.copilot.api_key'));
     $this->assertNull($config->get('providers.anthropic.api_key'));
   }

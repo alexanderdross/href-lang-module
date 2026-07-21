@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  *
  * Embeds a page's text (cached per content version), stores the vector, and
  * finds the nearest pages in *other* markets. The resulting candidates are what
- * Tier C (the LLM) adjudicates — embeddings are the workhorse that surfaces
+ * Tier C (the LLM) adjudicates - embeddings are the workhorse that surfaces
  * `à-propos ≈ about-us` without a glossary and without an LLM call per pair.
  *
  * The provider is inert until an endpoint is configured (like the AI matchers),

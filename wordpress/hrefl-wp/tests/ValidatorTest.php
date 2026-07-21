@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for Hrefl_Validator (hreflang correctness rules).
- * Standalone — no WordPress required.
+ * Standalone - no WordPress required.
  */
 final class ValidatorTest extends TestCase {
 

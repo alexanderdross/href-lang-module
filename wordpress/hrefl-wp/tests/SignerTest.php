@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * The canonical format is a contract: the client signer and the hub verifier
  * must produce identical bytes, or every request fails. This locks the format
  * so it cannot drift.
- * Standalone — no WordPress required.
+ * Standalone - no WordPress required.
  */
 final class SignerTest extends TestCase {
 

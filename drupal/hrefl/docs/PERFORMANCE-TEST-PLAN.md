@@ -21,7 +21,7 @@ measurements.
 These are guaranteed by design and verifiable by code review / architecture:
 
 - **Render reads only the local store.** `HreflangEmitter` depends on
-  `AlternatesStore` + `HreflangValidator` — **not** on `HubClient`. A page render
+  `AlternatesStore` + `HreflangValidator` - **not** on `HubClient`. A page render
   therefore cannot make a cross-backend HTTP call.
 - **Indexed single read.** `hrefl_client_alternates` is primary-keyed on
   `url_hash`; head, selector, feed, and sitemap all read by that key.
@@ -29,7 +29,7 @@ These are guaranteed by design and verifiable by code review / architecture:
   `hrefl_group:UUID`, not the whole site.
 - **All matching/validation/AI is queued**, never in a visitor request
   (`hook_cron`, queue workers, on-demand Drush).
-- **Sitemap paginates** — `AlternatesStore::all($limit, $offset)` +
+- **Sitemap paginates** - `AlternatesStore::all($limit, $offset)` +
   `SitemapGenerator` chunk into a `sitemapindex` beyond the per-file cap.
 
 > A cheap regression guard for the “no hub on render” rule: assert (reflection)
@@ -48,14 +48,14 @@ These are guaranteed by design and verifiable by code review / architecture:
 
 ## 4. Scale / load (optional, pre-large-rollout)
 
-- **Vector search** — `VectorStore::nearest()` is an exact brute-force cosine
+- **Vector search** - `VectorStore::nearest()` is an exact brute-force cosine
   scan. Fine at a few thousand pages; benchmark at your real inventory size and
   swap in a true ANN index (pgvector / vector DB) behind the same `nearest()`
   method if the scan time grows.
-- **Registry size** — index review on `hrefl_group_member`
+- **Registry size** - index review on `hrefl_group_member`
   (`group_uuid`, `market+status`, `hreflang`, `path_key`) already present;
   re-check `EXPLAIN` on the serve/monitor queries at scale.
-- **AI cost/quotas** — Tier C runs only on ambiguous candidates; add budget caps
+- **AI cost/quotas** - Tier C runs only on ambiguous candidates; add budget caps
   + a Tier-B-only fallback before a large rollout.
 
 ## 5. Regressions to watch

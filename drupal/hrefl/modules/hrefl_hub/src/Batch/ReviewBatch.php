@@ -10,7 +10,7 @@ namespace Drupal\hrefl_hub\Batch;
  * Runs in its own request cycle (progress bar), so it resolves services from
  * the container rather than via injection. Each chunk applies the same
  * ReviewActions guard, so a large bulk confirm behaves exactly like the CSV
- * import or a single-row action — only clean, valid members go live.
+ * import or a single-row action - only clean, valid members go live.
  */
 final class ReviewBatch {
 

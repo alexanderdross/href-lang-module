@@ -113,3 +113,36 @@ function _hrefl_client_enqueue_change(EntityInterface $entity, bool $deleted = F
     'deleted' => $deleted,
   ]);
 }
+
+/**
+ * Implements hook_page_bottom().
+ *
+ * Adds a small "Made with ❤ by Dross:Media" credit on this module's own admin
+ * pages. Scoped to admin routes owned by hrefl_client, so it never appears on
+ * the public sitemap or selector-feed endpoints.
+ */
+function hrefl_client_page_bottom(array &$page_bottom): void {
+  $route = (string) \Drupal::routeMatch()->getRouteName();
+  if (str_starts_with($route, 'hrefl_client.') && \Drupal::service('router.admin_context')->isAdminRoute()) {
+    $page_bottom['hrefl_credit'] = _hrefl_client_credit();
+  }
+}
+
+/**
+ * Builds the "Made with ❤ by Dross:Media" credit render array.
+ */
+function _hrefl_client_credit(): array {
+  return [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['hrefl-credit'],
+      'style' => 'text-align:center;padding:1.25rem 0;color:#6b7280;font-size:.85rem;',
+    ],
+    'text' => [
+      '#markup' => t('Made with @heart by <a href=":url" target="_blank" rel="noopener">Dross:Media</a>', [
+        '@heart' => '❤',
+        ':url' => 'https://dross.net/media/?hreflang',
+      ]),
+    ],
+  ];
+}

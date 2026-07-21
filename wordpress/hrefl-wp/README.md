@@ -1,9 +1,9 @@
-# Hreflang Cross-Site (hrefl) — WordPress plugin
+# Hreflang Cross-Site (hrefl) - WordPress plugin
 
 Cross-site `hreflang` for a **family of independent WordPress sites**: a
 **client** on every site and a **hub** on one, connected by a signed REST API.
 It emits reciprocal `hreflang` tags, a multilingual XML sitemap, and a
-country/language selector — the WordPress port of the Drupal `hrefl` module.
+country/language selector - the WordPress port of the Drupal `hrefl` module.
 
 > **Standalone by design.** This is for an all‑WordPress family. It does **not**
 > interoperate with the Drupal hub (e.g. site A WordPress + site B Drupal is not
@@ -75,7 +75,7 @@ site pulls its confirmed links and emits them.
 **Included (core loop):** client emit + sitemap + selector + signed sync; hub
 registry + signed REST + URL‑ownership + **SSRF‑safe target validation**
 (200/canonical/index, on cron) + slug matching + distributor + review queue
-(confirm/reject with the correctness guard — a member can only be confirmed once
+(confirm/reject with the correctness guard - a member can only be confirmed once
 its target is validated).
 
 **Deferred (present in the Drupal version, add later):** learned glossary + AI

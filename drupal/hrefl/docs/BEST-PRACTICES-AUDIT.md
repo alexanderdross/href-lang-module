@@ -2,7 +2,7 @@
 
 A self-audit of the codebase against Drupal and PHP engineering standards, plus
 the list of correctness fixes that regression tests now lock in. Run the
-automated tooling (`phpcs`, `phpstan`) on a real checkout to confirm — this is a
+automated tooling (`phpcs`, `phpstan`) on a real checkout to confirm - this is a
 structural review, not a substitute for those tools.
 
 ## 1. Standards checklist
@@ -28,16 +28,16 @@ structural review, not a substitute for those tools.
 
 ## 2. Deliberate patterns worth noting
 
-- **Optional key module** — `AiMatcherBase`, `EmbeddingProviderBase`,
+- **Optional key module** - `AiMatcherBase`, `EmbeddingProviderBase`,
   `MarketRegistry`, `RequestSigner` accept `key.repository` via
   `@?key.repository` (null when the module is absent) and fall back to env vars.
   This keeps the module installable without a hard dependency.
-- **One guard, many callers** — `ReviewActions::confirm()` is the single place
+- **One guard, many callers** - `ReviewActions::confirm()` is the single place
   confirmation correctness is enforced; the review UI, bulk batch, and CSV
   import all route through it. `MarketRegistry` is the single source for
   ownership + host allowlist + secret. `HreflangValidator` is the single emit
   gate on the client.
-- **Signature parity** — the client `RequestSigner` and the hub
+- **Signature parity** - the client `RequestSigner` and the hub
   `SignedRequestAccessCheck` document the identical canonical string
   (`METHOD\nPATH\nTIMESTAMP\nsha256(body)`); they live in separate modules by
   design and are each covered by tests.

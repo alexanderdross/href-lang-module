@@ -2,7 +2,7 @@
 /**
  * Standalone test bootstrap for the pure-logic unit tests.
  *
- * These tests do NOT require a full WordPress install — they stub the handful
+ * These tests do NOT require a full WordPress install - they stub the handful
  * of WP functions the tested classes use, then load those classes directly.
  * Database/REST-dependent behaviour is covered by the WP integration test
  * framework instead (see README / TEST-EXECUTION-REPORT).

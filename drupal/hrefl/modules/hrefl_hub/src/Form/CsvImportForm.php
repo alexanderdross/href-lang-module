@@ -12,7 +12,7 @@ use Drupal\hrefl_hub\Service\CsvImporter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Upload an edited review CSV — the point-and-click counterpart to the API.
+ * Upload an edited review CSV - the point-and-click counterpart to the API.
  *
  * Lets a non-technical editor take the exported CSV, edit decisions in a
  * spreadsheet, and upload it here. Rows are applied through CsvImporter, so the
