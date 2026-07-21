@@ -55,7 +55,17 @@ final class HubClient {
   }
 
   /**
+   * Hard cap on serve pages walked in one pull, so a misbehaving or malicious
+   * `next` cursor cannot loop forever (500 pages x 500 rows = 250k URLs).
+   */
+  private const MAX_PAGES = 500;
+
+  /**
    * Pull the resolved alternates for this backend's market.
+   *
+   * Walks the hub's cursor pagination (`next`) and accumulates every page, so
+   * the caller still swaps the whole set atomically while neither side has to
+   * build a large market in a single request.
    *
    * @return array
    *   Decoded serve payload: ['market' => .., 'pages' => [...]].
@@ -64,23 +74,47 @@ final class HubClient {
     $config = $this->configFactory->get('hrefl_client.settings');
     $base = rtrim((string) $config->get('hub_base_url'), '/');
     $url = $base . '/alternates';
-    $query = ['market' => (string) $config->get('market')];
-    try {
-      // Send the canonical (key-sorted) encoding so the bytes on the wire are
-      // exactly what the signature covers.
-      $response = $this->httpClient->request('GET', $url, [
-        'query' => RequestSigner::canonicalQuery($query),
-        // GET has no body; the signature covers method + path + query + time.
-        'headers' => $this->signer->headers('GET', $this->pathOf($url), '', $query),
-        'timeout' => 30,
-      ]);
-      $data = json_decode((string) $response->getBody(), TRUE);
-      return is_array($data) ? $data : [];
+    $market = (string) $config->get('market');
+    $pages = [];
+    $after = 0;
+    for ($i = 0; $i < self::MAX_PAGES; $i++) {
+      $query = ['market' => $market];
+      if ($after > 0) {
+        $query['after'] = (string) $after;
+      }
+      try {
+        // Send the canonical (key-sorted) encoding so the bytes on the wire are
+        // exactly what the signature covers.
+        $response = $this->httpClient->request('GET', $url, [
+          'query' => RequestSigner::canonicalQuery($query),
+          // GET has no body; the signature covers method + path + query + time.
+          'headers' => $this->signer->headers('GET', $this->pathOf($url), '', $query),
+          'timeout' => 30,
+        ]);
+        $data = json_decode((string) $response->getBody(), TRUE);
+      }
+      catch (GuzzleException $e) {
+        $this->logger->error('Alternates pull failed: @m', ['@m' => $e->getMessage()]);
+        // Return nothing so the consumer's empty-payload guard keeps the last
+        // known-good store rather than swapping in a partial set.
+        return [];
+      }
+      if (!is_array($data)) {
+        return [];
+      }
+      $batch = $data['pages'] ?? [];
+      if (is_array($batch)) {
+        $pages = array_merge($pages, $batch);
+      }
+      $next = $data['next'] ?? NULL;
+      if ($next === NULL || (int) $next <= $after) {
+        // Exhausted, or a non-advancing cursor: stop rather than loop.
+        return ['market' => $market, 'pages' => $pages];
+      }
+      $after = (int) $next;
     }
-    catch (GuzzleException $e) {
-      $this->logger->error('Alternates pull failed: @m', ['@m' => $e->getMessage()]);
-      return [];
-    }
+    $this->logger->warning('Alternates pull hit the page cap (@n); serving a partial set.', ['@n' => self::MAX_PAGES]);
+    return ['market' => $market, 'pages' => $pages];
   }
 
   /**

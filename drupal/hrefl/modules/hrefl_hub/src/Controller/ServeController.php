@@ -37,10 +37,18 @@ final class ServeController extends ControllerBase {
     if ($market === '') {
       return new JsonResponse(['error' => 'market required'], 400);
     }
+    // Cursor pagination: the client pages the market with ?after=<id>, so a
+    // large corpus is never built or serialized in a single response.
+    $after = max(0, (int) $request->query->get('after', 0));
+    $limit = (int) $request->query->get('limit', Distributor::PAGE_SIZE);
+    $limit = max(1, min($limit, Distributor::PAGE_SIZE));
+    $batch = $this->distributor->servePage($market, $after, $limit);
     return new JsonResponse([
       'market' => $market,
       'generated_at' => gmdate('c'),
-      'pages' => $this->distributor->alternatesForMarket($market),
+      'pages' => $batch['pages'],
+      // NULL when the market is exhausted; the client stops paging then.
+      'next' => $batch['next'],
     ]);
   }
 

@@ -90,9 +90,17 @@ final class Hrefl_Rest {
         if ($market === '') {
             return new WP_REST_Response(['error' => 'market required'], 400);
         }
+        // Cursor pagination: the client pages the market with ?after=<id>, so a
+        // large corpus is never built or serialized in a single response.
+        $after = max(0, (int) $request->get_param('after'));
+        $limit = (int) $request->get_param('limit');
+        $limit = $limit > 0 ? min($limit, Hrefl_Distributor::PAGE_SIZE) : Hrefl_Distributor::PAGE_SIZE;
+        $batch = $this->distributor->serve_page($market, $after, $limit);
         return new WP_REST_Response([
             'market' => $market,
-            'pages'  => $this->distributor->for_market($market),
+            'pages'  => $batch['pages'],
+            // null when the market is exhausted; the client stops paging then.
+            'next'   => $batch['next'],
         ], 200);
     }
 }

@@ -7,7 +7,28 @@ current, security-reviewed line and the only one under active development. v1 is
 frozen - it stays available (git tag `v1.0.0`) as a reference, but new work lands
 on v2.
 
-## 2.0.0 - 2026-07-21 - security & correctness hardening (v2 · latest)
+## 2.2.0 - 2026-07-21 - serve-path pagination (v2 · latest)
+
+- **Cursor-paginated alternates serve.** The hub's `/alternates` endpoint now
+  pages a market with `?after=<id>` (`Distributor::servePage`, ordered by the
+  serial member id), and the client walks the `next` cursor and accumulates
+  every page before one atomic store swap. A large market is never built,
+  serialized, or transferred in a single response; the client caps the walk at
+  500 pages so a hostile cursor cannot loop. Nothing changes for small sites -
+  they still resolve in one page.
+
+## 2.1.0 - 2026-07-21 - polish & SSRF pinning
+
+- **Human-readable selector labels.** The country/language block and the JSON
+  selector feed now show "English (United States)" / "Deutsch" (endonyms) via a
+  new `HreflLocale` helper, instead of the raw `en-US` code; `hreflang`/`lang`
+  stay the machine code.
+- **SSRF DNS pinning.** `TargetValidator` pins the validation fetch to the public
+  IP it just vetted (`CURLOPT_RESOLVE`), closing the TOCTOU/DNS-rebinding window
+  between the safety check and the request. Falls back to the host allowlist on
+  non-curl transports.
+
+## 2.0.0 - 2026-07-21 - security & correctness hardening
 
 The security- and code-quality-reviewed line (Factorial review). No feature
 changes versus v1; the module's behaviour is the same, with the defects below
@@ -89,17 +110,6 @@ PHP 8.3. The major bump reflects the breaking items below, not a rewrite.
 Noted, not blocking: a nonce store for full replay prevention, streaming CSV
 export, a review-queue pager past 500 rows, and `HubSettingsForm` floor ≤
 confirm validation.
-
-## 2.1.0 - 2026-07-21 - polish & SSRF pinning
-
-- **Human-readable selector labels.** The country/language block and the JSON
-  selector feed now show "English (United States)" / "Deutsch" (endonyms) via a
-  new `HreflLocale` helper, instead of the raw `en-US` code; `hreflang`/`lang`
-  stay the machine code.
-- **SSRF DNS pinning.** `TargetValidator` pins the validation fetch to the public
-  IP it just vetted (`CURLOPT_RESOLVE`), closing the TOCTOU/DNS-rebinding window
-  between the safety check and the request. Falls back to the host allowlist on
-  non-curl transports.
 
 ## 1.0.0 - 2026-07-15 - first release (v1 · original)
 

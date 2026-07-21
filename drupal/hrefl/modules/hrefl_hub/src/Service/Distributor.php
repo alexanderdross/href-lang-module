@@ -12,6 +12,11 @@ namespace Drupal\hrefl_hub\Service;
  */
 final class Distributor {
 
+  /**
+   * Default serve page size (confirmed members scanned per request).
+   */
+  public const PAGE_SIZE = 500;
+
   public function __construct(
     private readonly Registry $registry,
   ) {}
@@ -19,13 +24,46 @@ final class Distributor {
   /**
    * Build the resolved alternates for every confirmed URL in a market.
    *
+   * Convenience wrapper that walks all pages; prefer servePage() on the request
+   * path so a large market never lands in one response.
+   *
    * @return array
    *   List of ['url' => string, 'alternates' => [['hreflang' => .., 'href' => ..], ...]].
    */
   public function alternatesForMarket(string $market): array {
     $pages = [];
+    $after = 0;
+    do {
+      $batch = $this->servePage($market, $after, self::PAGE_SIZE);
+      $pages = array_merge($pages, $batch['pages']);
+      $after = $batch['next'];
+    } while ($after !== NULL);
+    return $pages;
+  }
+
+  /**
+   * One cursor page of resolved alternates for a market.
+   *
+   * @param string $market
+   *   The requesting market.
+   * @param int $afterId
+   *   Return members with a serial id greater than this (0 for the first page).
+   * @param int $limit
+   *   Maximum confirmed members to scan this page.
+   *
+   * @return array{pages: array, next: ?int}
+   *   The built pages and the cursor for the next request, or NULL when the
+   *   market is exhausted. The cursor is the last member *scanned* (not the
+   *   last emitted), so self-only groups that are skipped still advance it.
+   */
+  public function servePage(string $market, int $afterId = 0, int $limit = self::PAGE_SIZE): array {
+    $limit = max(1, $limit);
+    $members = $this->registry->confirmedMembersForMarket($market, $afterId, $limit);
+    $pages = [];
     $seenGroups = [];
-    foreach ($this->registry->confirmedMembersForMarket($market) as $member) {
+    $lastId = NULL;
+    foreach ($members as $member) {
+      $lastId = (int) $member['id'];
       $groupUuid = $member['group_uuid'];
       // Resolve the group's alternate set once, reuse for each member page.
       if (!isset($seenGroups[$groupUuid])) {
@@ -43,7 +81,17 @@ final class Distributor {
         'lastmod' => $member['source_changed'] !== NULL ? (int) $member['source_changed'] : NULL,
       ];
     }
-    return $pages;
+    return ['pages' => $pages, 'next' => self::nextCursor(count($members), $limit, $lastId)];
+  }
+
+  /**
+   * The cursor for the next serve page, or NULL when the market is exhausted.
+   *
+   * A full batch (scanned === limit) means there may be more, so page from the
+   * last id seen; a short batch is the final page. Pure for testability.
+   */
+  public static function nextCursor(int $scanned, int $limit, ?int $lastId): ?int {
+    return ($scanned === $limit && $lastId !== NULL) ? $lastId : NULL;
   }
 
   /**
