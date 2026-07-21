@@ -3,7 +3,7 @@ type: module
 description: 'Runs on every backend: collects page inventory, pulls resolved alternates from the hub, and emits reciprocal hreflang tags, sitemap alternates, and a country/language selector.'
 package: 'SEO'
 license: GPL-2.0-or-later
-version: '2.2.0'
+version: '2.2.1'
 core_version_requirement: '^10.3 || ^11'
 configure: hrefl_client.settings
 dependencies:

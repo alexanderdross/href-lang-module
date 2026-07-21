@@ -7,7 +7,16 @@ current, security-reviewed line and the only one under active development. v1 is
 frozen - it stays available (git tag `v1.0.0`) as a reference, but new work lands
 on v2.
 
-## 2.2.0 - 2026-07-21 - serve-path pagination (v2 · latest)
+## 2.2.1 - 2026-07-22 - auto-confirm collision guard (v2 · latest)
+
+- **Auto-confirm never creates an hreflang collision.** When `auto_confirm_enabled`
+  is on, the engine now confirms a confident match only if no other confirmed
+  member in its group already uses that hreflang code (`MappingEngine::route()` ->
+  `hreflangCollides()`) - the same guard a human confirm passes. A colliding
+  match routes to review instead of going live. This brings the auto-confirm
+  path to parity with the WordPress plugin's guard (WP 0.3.1).
+
+## 2.2.0 - 2026-07-21 - serve-path pagination
 
 - **Cursor-paginated alternates serve.** The hub's `/alternates` endpoint now
   pages a market with `?after=<id>` (`Distributor::servePage`, ordered by the
