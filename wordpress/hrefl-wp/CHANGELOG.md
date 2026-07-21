@@ -2,6 +2,19 @@
 
 All notable changes to the WordPress plugin. Dates are ISO (YYYY-MM-DD).
 
+## 0.3.1 - 2026-07-22 - optional auto-confirm (opt-out of manual review)
+
+- **Auto-confirm setting** - a new hub checkbox, **off by default**, under a
+  "Human review" heading. Left off (recommended), a human confirms every match
+  before it goes live - the default human-in-the-loop. Turned on, the hub
+  auto-confirms matched mappings on the next cron run, but **only through the
+  same correctness guard** as manual confirm (`Hrefl_Review_Actions`): a mapping
+  is published only once its target has validated (HTTP 200, indexable) and no
+  other confirmed member in its group already uses that hreflang code. A broken
+  or colliding mapping can never go live automatically. Mirrors the Drupal
+  `auto_confirm_enabled` option. New `Registry::proposed_valid_members()` and an
+  `AutoConfirmTest` guarding the safe default.
+
 ## 0.3.0 - 2026-07-21 - feature parity with Drupal
 
 Closes the documented condensed-port gaps - the WordPress plugin now matches the

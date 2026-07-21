@@ -114,6 +114,17 @@ final class Hrefl_Plugin {
         // has something to compare against. No-op unless embeddings are set up.
         (new Hrefl_Embedding_Matcher($registry, new Hrefl_Vector_Store()))->embed_pass();
         (new Hrefl_Matcher($registry))->run();
+
+        // Optional: if the operator has opted out of manual review, auto-confirm
+        // matched mappings. This skips only the human click - the same guard
+        // still applies (target must have validated; no hreflang collision in
+        // the group), so a bad proposal can never go live automatically.
+        if (Hrefl_Settings::get('auto_confirm')) {
+            $actions = new Hrefl_Review_Actions($registry);
+            foreach ($registry->proposed_valid_members(200) as $m) {
+                $actions->confirm((int) $m['id']);
+            }
+        }
     }
 
     /**

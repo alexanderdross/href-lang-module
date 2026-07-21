@@ -125,6 +125,12 @@ final class Hrefl_Admin {
                     <tr><th><?php esc_html_e('Embedding API key', 'hrefl'); ?></th>
                         <td><input type="password" name="embedding_key" value="<?php echo esc_attr($s['embedding_key']); ?>" class="regular-text" autocomplete="off">
                         <p class="description"><?php esc_html_e('Optional; or HREFL_EMBEDDING_KEY in wp-config.php.', 'hrefl'); ?></p></td></tr>
+                    <tr><th colspan="2"><h2 style="margin:0"><?php esc_html_e('Human review', 'hrefl'); ?></h2></th></tr>
+                    <tr><th><?php esc_html_e('Auto-confirm mappings', 'hrefl'); ?></th>
+                        <td><label><input type="checkbox" name="auto_confirm" value="1" <?php checked($s['auto_confirm']); ?>>
+                        <?php esc_html_e('Skip manual review - publish matched mappings automatically', 'hrefl'); ?></label>
+                        <p class="description"><strong><?php esc_html_e('Off by default (recommended): a human confirms every match before it goes live.', 'hrefl'); ?></strong>
+                        <?php esc_html_e('When on, the hub auto-confirms each matched mapping on the next cron run. The correctness guard still applies - a mapping is only published once its target has validated (HTTP 200, indexable) and no other confirmed member in its group already uses that hreflang code - so a broken mapping can never go live. This removes the human-in-the-loop; enable it only once you trust the matching on your content.', 'hrefl'); ?></p></td></tr>
                     <?php endif; ?>
                 </table>
                 <?php submit_button(); ?>
@@ -151,6 +157,7 @@ final class Hrefl_Admin {
             'embedding_endpoint' => esc_url_raw($post['embedding_endpoint'] ?? ''),
             'embedding_model'    => sanitize_text_field($post['embedding_model'] ?? ''),
             'embedding_key'      => sanitize_text_field($post['embedding_key'] ?? ''),
+            'auto_confirm'       => empty($post['auto_confirm']) ? 0 : 1,
         ]);
         flush_rewrite_rules(false);
     }
