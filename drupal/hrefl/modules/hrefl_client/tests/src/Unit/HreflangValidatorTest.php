@@ -58,6 +58,19 @@ final class HreflangValidatorTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::isValidCode
+   */
+  public function testIsValidCodeAcceptsBcp47ScriptAndM49(): void {
+    // ISO 15924 script and UN M49 numeric region subtags (normalized form).
+    $this->assertTrue($this->validator->isValidCode('zh-Hans'));
+    $this->assertTrue($this->validator->isValidCode('zh-Hant-TW'));
+    $this->assertTrue($this->validator->isValidCode('es-419'));
+    // But a lowercase script or a 2-digit region is not valid.
+    $this->assertFalse($this->validator->isValidCode('zh-hans'));
+    $this->assertFalse($this->validator->isValidCode('es-41'));
+  }
+
+  /**
    * @covers ::isAbsolute
    */
   public function testIsAbsolute(): void {

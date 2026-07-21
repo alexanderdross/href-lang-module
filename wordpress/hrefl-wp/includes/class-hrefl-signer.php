@@ -85,14 +85,18 @@ final class Hrefl_Signer {
 
     /**
      * The canonical (key-sorted, re-encoded) form of a query parameter set.
-     * Must match the Drupal RequestSigner::canonicalQuery() output.
+     *
+     * Uses http_build_query() with default encoding, mirroring the Drupal
+     * RequestSigner::canonicalQuery(). (The two platforms do not interoperate,
+     * so this only has to agree with itself; keeping the same call avoids a
+     * subtle divergence.)
      */
     public static function canonical_query(array $query): string {
         if (!$query) {
             return '';
         }
         ksort($query);
-        return http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        return http_build_query($query);
     }
 
     /**

@@ -44,9 +44,38 @@ if (!function_exists('get_option')) {
     }
 }
 
+// Minimal WP_REST_* stubs so the REST controller's reject paths (which return
+// before any DB access) can be unit-tested without a WordPress install.
+if (!class_exists('WP_REST_Request')) {
+    class WP_REST_Request {
+        /** @param array<string,mixed> $json @param array<string,string> $headers */
+        public function __construct(
+            private array $json = [],
+            private array $headers = [],
+            private string $method = 'POST'
+        ) {}
+        public function get_json_params() { return $this->json; }
+        public function get_header(string $key): string { return $this->headers[$key] ?? ''; }
+        public function get_method(): string { return $this->method; }
+        public function get_route(): string { return '/hrefl/v1/inventory'; }
+        public function get_body(): string { return ''; }
+        public function get_query_params(): array { return []; }
+        public function get_param(string $key) { return null; }
+    }
+}
+if (!class_exists('WP_REST_Response')) {
+    class WP_REST_Response {
+        public function __construct(private mixed $data = null, private int $status = 200) {}
+        public function get_status(): int { return $this->status; }
+        public function get_data(): mixed { return $this->data; }
+    }
+}
+
 $plugin = dirname(__DIR__);
 require_once $plugin . '/includes/class-hrefl-validator.php';
 require_once $plugin . '/includes/class-hrefl-signer.php';
 require_once $plugin . '/includes/class-hrefl-registry.php';
 require_once $plugin . '/includes/class-hrefl-settings.php';
 require_once $plugin . '/includes/class-hrefl-markets.php';
+require_once $plugin . '/includes/class-hrefl-distributor.php';
+require_once $plugin . '/includes/class-hrefl-rest.php';
